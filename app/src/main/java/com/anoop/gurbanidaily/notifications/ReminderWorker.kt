@@ -27,6 +27,9 @@ class ReminderWorker(
             return Result.success()
         }
         val shabad = ShabadPicker.shabadForToday()
+        val slotLabel = inputData.getString(ReminderScheduler.KEY_SLOT_LABEL)
+            ?: ctx.getString(R.string.reminder_title)
+
         val openApp = PendingIntent.getActivity(
             ctx, 0,
             Intent(ctx, MainActivity::class.java),
@@ -35,8 +38,8 @@ class ReminderWorker(
 
         val notif = NotificationCompat.Builder(ctx, ReminderScheduler.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_splash_logo)
-            .setContentTitle(ctx.getString(R.string.reminder_title))
-            .setContentText(shabad.meaning.take(100))
+            .setContentTitle(slotLabel)
+            .setContentText(shabad.meaning.take(120))
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("${shabad.gurmukhi}\n\n${shabad.meaning}\n\n— ${shabad.source}")
@@ -46,7 +49,8 @@ class ReminderWorker(
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 
-        NotificationManagerCompat.from(ctx).notify(1001, notif)
+        val notifId = 1000 + (slotLabel.hashCode() and 0x0FFF)
+        NotificationManagerCompat.from(ctx).notify(notifId, notif)
         return Result.success()
     }
 }

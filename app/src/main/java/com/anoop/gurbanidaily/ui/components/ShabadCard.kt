@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +44,7 @@ fun ShabadCard(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     onShare: () -> Unit,
+    onListen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(
@@ -93,7 +96,17 @@ fun ShabadCard(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
+                FilledTonalButton(onClick = onListen) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Listen on YouTube")
+                }
+                Spacer(Modifier.height(4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,

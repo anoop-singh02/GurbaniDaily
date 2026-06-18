@@ -3,6 +3,7 @@ package com.anoop.gurbanidaily.notifications
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.anoop.gurbanidaily.data.ReminderSlot
 import com.anoop.gurbanidaily.data.UserPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,10 +16,16 @@ class BootReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val prefs = UserPrefs(context.applicationContext)
-                if (prefs.reminderEnabled.first()) {
-                    val hour = prefs.reminderHour.first()
-                    val minute = prefs.reminderMinute.first()
-                    ReminderScheduler.schedule(context.applicationContext, hour, minute)
+                ReminderSlot.entries.forEach { slot ->
+                    val state = prefs.reminder(slot).first()
+                    if (state.enabled) {
+                        ReminderScheduler.schedule(
+                            context.applicationContext,
+                            slot,
+                            state.hour,
+                            state.minute
+                        )
+                    }
                 }
             } finally {
                 pending.finish()

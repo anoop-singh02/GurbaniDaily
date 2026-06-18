@@ -143,6 +143,10 @@ fun HomeScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             scope.launch { prefs.toggleFavorite(s.id) }
                         },
+                        onListen = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            com.anoop.gurbanidaily.data.Listen.openYouTube(context, s)
+                        },
                         onShare = {
                             val text = "${s.gurmukhi}\n\n${s.transliteration}\n\n${s.meaning}\n\n— ${s.source}"
                             val send = Intent(Intent.ACTION_SEND).apply {

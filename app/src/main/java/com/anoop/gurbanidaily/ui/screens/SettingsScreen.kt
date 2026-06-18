@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +34,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -42,7 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.anoop.gurbanidaily.GurbaniApp
 import com.anoop.gurbanidaily.data.GurbaniData
+import com.anoop.gurbanidaily.data.ReminderSlot
 import com.anoop.gurbanidaily.notifications.ReminderScheduler
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,19 +62,20 @@ fun SettingsScreen(onBack: () -> Unit) {
     val dark by prefs.darkMode.collectAsState(initial = false)
     val dynamic by prefs.dynamicColor.collectAsState(initial = true)
     val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
-    val reminderOn by prefs.reminderEnabled.collectAsState(initial = false)
-    val hour by prefs.reminderHour.collectAsState(initial = 6)
-    val minute by prefs.reminderMinute.collectAsState(initial = 0)
 
+    var pendingSlot by remember { mutableStateOf<ReminderSlot?>(null) }
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        if (granted) {
+        val slot = pendingSlot
+        if (granted && slot != null) {
             scope.launch {
-                prefs.setReminderEnabled(true)
-                ReminderScheduler.schedule(context, hour, minute)
+                prefs.setReminderEnabled(slot, true)
+                val state = prefs.reminder(slot).first()
+                ReminderScheduler.schedule(context, slot, state.hour, state.minute)
             }
         }
+        pendingSlot = null
     }
 
     Scaffold(
@@ -117,54 +124,75 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
 
-            SectionCard("Daily reminder") {
-                SwitchRow(
-                    title = "Notify me every day",
-                    checked = reminderOn,
-                    subtitle = "Tap the notification to open today's shabad"
-                ) { wantOn ->
-                    if (wantOn) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                            ContextCompat.checkSelfPermission(
-                                context, Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        } else {
-                            scope.launch {
-                                prefs.setReminderEnabled(true)
-                                ReminderScheduler.schedule(context, hour, minute)
+            SectionCard("Daily reminders") {
+                Text(
+                    "Tap a notification to open today's shabad.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                ReminderSlot.entries.forEachIndexed { idx, slot ->
+                    val state by prefs.reminder(slot).collectAsState(
+                        initial = com.anoop.gurbanidaily.data.ReminderState(
+                            false, slot.defaultHour, slot.defaultMinute
+                        )
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(slot.label, fontWeight = FontWeight.Medium)
+                            TextButton(
+                                onClick = {
+                                    TimePickerDialog(
+                                        context,
+                                        { _, h, m ->
+                                            scope.launch {
+                                                prefs.setReminderTime(slot, h, m)
+                                                if (state.enabled) {
+                                                    ReminderScheduler.schedule(context, slot, h, m)
+                                                }
+                                            }
+                                        },
+                                        state.hour, state.minute, false
+                                    ).show()
+                                },
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                            ) {
+                                Text("%02d:%02d".format(state.hour, state.minute))
                             }
                         }
-                    } else {
-                        scope.launch {
-                            prefs.setReminderEnabled(false)
-                            ReminderScheduler.cancel(context)
-                        }
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Time", fontWeight = FontWeight.Medium)
-                    TextButton(onClick = {
-                        TimePickerDialog(
-                            context,
-                            { _, h, m ->
-                                scope.launch {
-                                    prefs.setReminderTime(h, m)
-                                    if (reminderOn) {
-                                        ReminderScheduler.schedule(context, h, m)
+                        Switch(
+                            checked = state.enabled,
+                            onCheckedChange = { wantOn ->
+                                if (wantOn) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                        ContextCompat.checkSelfPermission(
+                                            context, Manifest.permission.POST_NOTIFICATIONS
+                                        ) != PackageManager.PERMISSION_GRANTED
+                                    ) {
+                                        pendingSlot = slot
+                                        permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        scope.launch {
+                                            prefs.setReminderEnabled(slot, true)
+                                            ReminderScheduler.schedule(
+                                                context, slot, state.hour, state.minute
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    scope.launch {
+                                        prefs.setReminderEnabled(slot, false)
+                                        ReminderScheduler.cancel(context, slot)
                                     }
                                 }
-                            },
-                            hour, minute, false
-                        ).show()
-                    }) {
-                        Text("%02d:%02d".format(hour, minute))
+                            }
+                        )
                     }
+                    if (idx < ReminderSlot.entries.lastIndex) HorizontalDivider()
                 }
             }
 
@@ -172,6 +200,11 @@ fun SettingsScreen(onBack: () -> Unit) {
                 Text(
                     "Daily Gurbani — ${GurbaniData.shabads.size} shabads bundled, fully offline.",
                     style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    "Tap \"Listen on YouTube\" on any shabad to hear it as kirtan.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     "Waheguru Ji Ka Khalsa, Waheguru Ji Ki Fateh.",
