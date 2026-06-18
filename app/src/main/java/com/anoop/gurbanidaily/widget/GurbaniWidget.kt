@@ -1,4 +1,4 @@
-package com.anoop.gurbanidaily
+package com.anoop.gurbanidaily.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -7,6 +7,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.widget.RemoteViews
+import com.anoop.gurbanidaily.MainActivity
+import com.anoop.gurbanidaily.R
+import com.anoop.gurbanidaily.data.ShabadPicker
 
 class GurbaniWidget : AppWidgetProvider() {
 
@@ -41,7 +44,6 @@ class GurbaniWidget : AppWidgetProvider() {
         views.setTextViewText(R.id.widget_meaning, shabad.meaning)
         views.setTextViewText(R.id.widget_source, shabad.source)
 
-        // Tap card → open app
         val openApp = PendingIntent.getActivity(
             context, 0,
             Intent(context, MainActivity::class.java),
@@ -49,7 +51,6 @@ class GurbaniWidget : AppWidgetProvider() {
         )
         views.setOnClickPendingIntent(R.id.widget_root, openApp)
 
-        // Tap refresh → shuffle
         val refresh = PendingIntent.getBroadcast(
             context, 1,
             Intent(context, GurbaniWidget::class.java).apply { action = ACTION_REFRESH },

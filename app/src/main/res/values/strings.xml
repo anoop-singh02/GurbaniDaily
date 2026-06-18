@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Daily Gurbani</string>
+    <string name="reminder_channel_name">Daily Shabad Reminder</string>
+    <string name="reminder_channel_desc">Daily reminders to read a shabad.</string>
+    <string name="reminder_title">Today\'s Shabad</string>
 </resources>

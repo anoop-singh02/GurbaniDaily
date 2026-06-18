@@ -1,12 +1,12 @@
 <resources>
-    <style name="Theme.GurbaniDaily" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.GurbaniDaily" parent="android:Theme.Material.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
     </style>
 
     <style name="Theme.GurbaniDaily.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">#FCF8F3</item>
+        <item name="windowSplashScreenBackground">#14110D</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
         <item name="postSplashScreenTheme">@style/Theme.GurbaniDaily</item>
     </style>
