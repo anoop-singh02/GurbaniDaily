@@ -44,7 +44,7 @@ fun LibraryScreen(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        item(span = { GridCells.Fixed(2).let { androidx.compose.foundation.lazy.grid.GridItemSpan(2) } }) {
+        item(span = { androidx.compose.foundation.lazy.grid.GridItemSpan(2) }) {
             Column {
                 Spacer(Modifier.height(8.dp))
                 DisplayHeader(title = "Explore Shabads", subtitle = "Browse by tradition")
