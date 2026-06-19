@@ -31,6 +31,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
+import com.anoop.gurbanidaily.ui.components.GradientBackdrop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -78,7 +82,9 @@ fun SettingsScreen(onBack: () -> Unit) {
         pendingSlot = null
     }
 
+    GradientBackdrop(darkTheme = isSystemInDarkTheme()) {
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Settings") },
@@ -86,7 +92,8 @@ fun SettingsScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -213,6 +220,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 )
             }
         }
+    }
     }
 }
 

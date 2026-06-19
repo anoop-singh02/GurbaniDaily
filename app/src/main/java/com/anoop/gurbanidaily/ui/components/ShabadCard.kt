@@ -15,22 +15,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,90 +50,120 @@ fun ShabadCard(
     onListen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ElevatedCard(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         AnimatedContent(
             targetState = shabad,
             transitionSpec = {
-                (slideInVertically { it / 6 } + fadeIn()) togetherWith
-                    (slideOutVertically { -it / 6 } + fadeOut())
+                (slideInVertically { it / 8 } + fadeIn()) togetherWith
+                    (slideOutVertically { -it / 8 } + fadeOut())
             },
             label = "shabad-transition"
         ) { s ->
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                PillChip(text = sourceLabel(s.source))
+
+                Spacer(Modifier.height(24.dp))
+
                 Text(
                     text = s.gurmukhi,
-                    fontSize = (24 * fontScale).sp,
-                    lineHeight = (38 * fontScale).sp,
+                    fontSize = (28 * fontScale).sp,
+                    lineHeight = (44 * fontScale).sp,
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary
                 )
+
                 Spacer(Modifier.height(18.dp))
+
                 Text(
                     text = s.transliteration,
-                    fontSize = (15 * fontScale).sp,
-                    lineHeight = (24 * fontScale).sp,
+                    fontSize = (14 * fontScale).sp,
+                    lineHeight = (22 * fontScale).sp,
                     textAlign = TextAlign.Center,
+                    fontStyle = FontStyle.Italic,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(18.dp))
-                HorizontalDivider(Modifier.fillMaxWidth(0.4f))
-                Spacer(Modifier.height(18.dp))
+
+                Spacer(Modifier.height(22.dp))
+                ThreeDotDivider()
+                Spacer(Modifier.height(22.dp))
+
                 Text(
                     text = s.meaning,
-                    fontSize = (16 * fontScale).sp,
-                    lineHeight = (26 * fontScale).sp,
-                    textAlign = TextAlign.Center
-                )
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    text = s.source,
-                    fontSize = (13 * fontScale).sp,
+                    fontSize = (17 * fontScale).sp,
+                    lineHeight = (28 * fontScale).sp,
                     textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                Text(
+                    text = "— ${s.source}",
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.secondary
                 )
-                Spacer(Modifier.height(16.dp))
-                FilledTonalButton(onClick = onListen) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Listen on YouTube")
-                }
-                Spacer(Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+
+                Spacer(Modifier.height(22.dp))
+
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 ) {
-                    IconButton(onClick = onToggleFavorite) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite
-                            else Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Favourite",
-                            tint = if (isFavorite) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.width(8.dp))
-                    IconButton(onClick = onShare) {
-                        Icon(
-                            imageVector = Icons.Outlined.Share,
-                            contentDescription = "Share",
-                            modifier = Modifier.size(22.dp)
-                        )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = onToggleFavorite) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Filled.Favorite
+                                else Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Favourite",
+                                tint = if (isFavorite) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        IconButton(onClick = onShare) {
+                            Icon(
+                                imageVector = Icons.Outlined.Share,
+                                contentDescription = "Share",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        FilledTonalButton(
+                            onClick = onListen,
+                            shape = CircleShape
+                        ) {
+                            Icon(
+                                Icons.Filled.PlayArrow,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Listen",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
+
+private fun sourceLabel(source: String): String {
+    val firstPart = source.substringBefore("—").substringBefore(",").trim()
+    return firstPart.take(40)
 }

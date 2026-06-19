@@ -19,6 +19,10 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
+import com.anoop.gurbanidaily.ui.components.GradientBackdrop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +45,9 @@ fun SearchScreen(onBack: () -> Unit) {
         if (query.isBlank()) GurbaniData.shabads else ShabadPicker.search(query)
     }
 
+    GradientBackdrop(darkTheme = isSystemInDarkTheme()) {
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("Search") },
@@ -49,7 +55,8 @@ fun SearchScreen(onBack: () -> Unit) {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -82,5 +89,6 @@ fun SearchScreen(onBack: () -> Unit) {
                 }
             }
         }
+    }
     }
 }

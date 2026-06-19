@@ -16,6 +16,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.isSystemInDarkTheme
+import androidx.compose.ui.graphics.Color
+import com.anoop.gurbanidaily.ui.components.GradientBackdrop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,7 +43,9 @@ fun HistoryScreen(onBack: () -> Unit) {
     val history by app.prefs.history.collectAsState(initial = emptyList())
     val items = history.mapNotNull { ShabadPicker.byId(it) }
 
+    GradientBackdrop(darkTheme = isSystemInDarkTheme()) {
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = { Text("History") },
@@ -54,7 +60,8 @@ fun HistoryScreen(onBack: () -> Unit) {
                     }) {
                         Icon(Icons.Filled.DeleteOutline, contentDescription = "Clear")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -82,5 +89,6 @@ fun HistoryScreen(onBack: () -> Unit) {
                 }
             }
         }
+    }
     }
 }

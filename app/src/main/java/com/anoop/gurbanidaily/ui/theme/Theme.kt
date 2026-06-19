@@ -8,31 +8,46 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val Saffron = Color(0xFFE0792B)
-private val DeepSaffron = Color(0xFFB85C16)
-private val NavyAccent = Color(0xFF1A3A5C)
-
 private val LightColors = lightColorScheme(
-    primary = DeepSaffron,
-    secondary = NavyAccent,
-    background = Color(0xFFFCF8F3),
-    surface = Color(0xFFFFFFFF)
+    primary = BurntSaffron,
+    onPrimary = CreamSurface,
+    primaryContainer = PeachAccent,
+    onPrimaryContainer = DeepSaffronText,
+    secondary = InkNavy,
+    onSecondary = CreamSurface,
+    background = CreamBackground,
+    onBackground = InkText,
+    surface = CreamSurface,
+    onSurface = InkText,
+    surfaceVariant = CreamBackground,
+    onSurfaceVariant = WarmMutedText,
+    outline = SoftHairline,
+    outlineVariant = SoftHairline
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Saffron,
-    secondary = Color(0xFF8FB4D6),
-    background = Color(0xFF14110D),
-    surface = Color(0xFF1F1A14)
+    primary = WarmSaffron,
+    onPrimary = InkBackground,
+    primaryContainer = SaffronGlow,
+    onPrimaryContainer = WarmSaffron,
+    secondary = MistedBlue,
+    onSecondary = InkBackground,
+    background = InkBackground,
+    onBackground = CreamText,
+    surface = CharcoalSurface,
+    onSurface = CreamText,
+    surfaceVariant = CharcoalSurface,
+    onSurfaceVariant = DimText,
+    outline = DarkHairline,
+    outlineVariant = DarkHairline
 )
 
 @Composable
 fun GurbaniTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
@@ -42,5 +57,9 @@ fun GurbaniTheme(
         darkTheme -> DarkColors
         else -> LightColors
     }
-    MaterialTheme(colorScheme = colorScheme, content = content)
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = GurbaniTypography,
+        content = content
+    )
 }
