@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(onBack: () -> Unit) {
+fun HistoryScreen(onBack: () -> Unit, onOpenShabad: (String) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as GurbaniApp
     val scope = rememberCoroutineScope()
@@ -84,7 +84,8 @@ fun HistoryScreen(onBack: () -> Unit) {
                 items(items, key = { it.id }) { s ->
                     ShabadListRow(
                         shabad = s,
-                        onListen = { Listen.openYouTube(context, s) }
+                        onListen = { Listen.openYouTube(context, s) },
+                        onClick = { onOpenShabad(s.id) }
                     )
                 }
             }

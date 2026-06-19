@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 
 enum class TopTab(val route: String, val label: String, val icon: ImageVector) {
     Quote("tab/quote", "Today", Icons.Outlined.LightMode),
-    Hukamnama("tab/hukamnama", "Hukamnama", Icons.Outlined.WbSunny),
+    Hukamnama("tab/hukamnama", "Hukam", Icons.Outlined.WbSunny),
     Library("tab/library", "Library", Icons.Outlined.AutoStories);
 
     companion object {

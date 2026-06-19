@@ -81,8 +81,8 @@ fun HukamnamaScreen(contentPadding: PaddingValues) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(contentPadding)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

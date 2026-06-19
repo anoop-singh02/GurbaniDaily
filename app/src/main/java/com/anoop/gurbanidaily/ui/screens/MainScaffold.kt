@@ -41,7 +41,8 @@ fun MainScaffold(
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
-    onOpenCategory: (String) -> Unit
+    onOpenCategory: (String) -> Unit,
+    onOpenShabad: (String) -> Unit
 ) {
     var currentTab by rememberSaveable { mutableStateOf(TopTab.Quote.route) }
     val tab = TopTab.fromRoute(currentTab) ?: TopTab.Quote
@@ -96,7 +97,8 @@ fun MainScaffold(
                         TopTab.Library -> LibraryScreen(
                             contentPadding = padding,
                             onOpenCategory = onOpenCategory,
-                            onOpenSearch = onOpenSearch
+                            onOpenSearch = onOpenSearch,
+                            onOpenShabad = onOpenShabad
                         )
                     }
                 }

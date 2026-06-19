@@ -33,7 +33,7 @@ import com.anoop.gurbanidaily.ui.components.ShabadListRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavoritesScreen(onBack: () -> Unit) {
+fun FavoritesScreen(onBack: () -> Unit, onOpenShabad: (String) -> Unit) {
     val context = LocalContext.current
     val app = context.applicationContext as GurbaniApp
     val favorites by app.prefs.favorites.collectAsState(initial = emptySet())
@@ -73,7 +73,8 @@ fun FavoritesScreen(onBack: () -> Unit) {
                 items(items, key = { it.id }) { s ->
                     ShabadListRow(
                         shabad = s,
-                        onListen = { Listen.openYouTube(context, s) }
+                        onListen = { Listen.openYouTube(context, s) },
+                        onClick = { onOpenShabad(s.id) }
                     )
                 }
             }

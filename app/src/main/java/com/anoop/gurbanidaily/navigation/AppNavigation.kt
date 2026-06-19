@@ -16,6 +16,7 @@ import com.anoop.gurbanidaily.ui.screens.HistoryScreen
 import com.anoop.gurbanidaily.ui.screens.MainScaffold
 import com.anoop.gurbanidaily.ui.screens.SearchScreen
 import com.anoop.gurbanidaily.ui.screens.SettingsScreen
+import com.anoop.gurbanidaily.ui.screens.ShabadReaderScreen
 
 @Composable
 fun AppNavigation() {
@@ -34,19 +35,46 @@ fun AppNavigation() {
                 onOpenHistory = { nav.navigate(Dest.History.route) },
                 onOpenSettings = { nav.navigate(Dest.Settings.route) },
                 onOpenSearch = { nav.navigate(Dest.Search.route) },
-                onOpenCategory = { id -> nav.navigate(Dest.Category.build(id)) }
+                onOpenCategory = { id -> nav.navigate(Dest.Category.build(id)) },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
             )
         }
-        composable(Dest.Favorites.route) { FavoritesScreen(onBack = { nav.popBackStack() }) }
-        composable(Dest.History.route) { HistoryScreen(onBack = { nav.popBackStack() }) }
-        composable(Dest.Search.route) { SearchScreen(onBack = { nav.popBackStack() }) }
+        composable(Dest.Favorites.route) {
+            FavoritesScreen(
+                onBack = { nav.popBackStack() },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
+            )
+        }
+        composable(Dest.History.route) {
+            HistoryScreen(
+                onBack = { nav.popBackStack() },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
+            )
+        }
+        composable(Dest.Search.route) {
+            SearchScreen(
+                onBack = { nav.popBackStack() },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
+            )
+        }
         composable(Dest.Settings.route) { SettingsScreen(onBack = { nav.popBackStack() }) }
         composable(
             route = Dest.Category.route,
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) { backStack ->
             val id = backStack.arguments?.getString("id") ?: return@composable
-            CategoryScreen(categoryId = id, onBack = { nav.popBackStack() })
+            CategoryScreen(
+                categoryId = id,
+                onBack = { nav.popBackStack() },
+                onOpenShabad = { sid -> nav.navigate(Dest.Reader.build(sid)) }
+            )
+        }
+        composable(
+            route = Dest.Reader.route,
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStack ->
+            val id = backStack.arguments?.getString("id") ?: return@composable
+            ShabadReaderScreen(shabadId = id, onBack = { nav.popBackStack() })
         }
     }
 }

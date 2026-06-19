@@ -30,7 +30,7 @@ import com.anoop.gurbanidaily.ui.components.ShabadListRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryScreen(categoryId: String, onBack: () -> Unit) {
+fun CategoryScreen(categoryId: String, onBack: () -> Unit, onOpenShabad: (String) -> Unit) {
     val context = LocalContext.current
     val category = Categories.byId(categoryId) ?: return
     val items = Categories.shabadsIn(category)
@@ -71,7 +71,8 @@ fun CategoryScreen(categoryId: String, onBack: () -> Unit) {
             items(items, key = { it.id }) { s ->
                 ShabadListRow(
                     shabad = s,
-                    onListen = { Listen.openYouTube(context, s) }
+                    onListen = { Listen.openYouTube(context, s) },
+                    onClick = { onOpenShabad(s.id) }
                 )
             }
             item { Spacer(Modifier.height(120.dp)) }

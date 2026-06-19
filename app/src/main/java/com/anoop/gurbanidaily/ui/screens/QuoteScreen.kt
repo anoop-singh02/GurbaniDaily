@@ -40,7 +40,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.anoop.gurbanidaily.GurbaniApp
 import com.anoop.gurbanidaily.data.GurbaniData
-import com.anoop.gurbanidaily.data.Listen
 import com.anoop.gurbanidaily.data.ShabadPicker
 import com.anoop.gurbanidaily.ui.components.DisplayHeader
 import com.anoop.gurbanidaily.ui.components.ShabadCard
@@ -97,8 +96,8 @@ fun QuoteScreen(contentPadding: PaddingValues) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(contentPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -120,10 +119,7 @@ fun QuoteScreen(contentPadding: PaddingValues) {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         scope.launch { prefs.toggleFavorite(s.id) }
                     },
-                    onListen = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        Listen.openYouTube(context, s)
-                    },
+                    onListen = null,
                     onShare = {
                         val text = "${s.gurmukhi}\n\n${s.transliteration}\n\n${s.meaning}\n\n— ${s.source}"
                         val send = Intent(Intent.ACTION_SEND).apply {

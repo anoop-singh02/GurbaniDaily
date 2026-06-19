@@ -32,15 +32,19 @@ import com.anoop.gurbanidaily.ui.components.DisplayHeader
 fun LibraryScreen(
     contentPadding: PaddingValues,
     onOpenCategory: (String) -> Unit,
-    onOpenSearch: () -> Unit
+    onOpenSearch: () -> Unit,
+    onOpenShabad: (String) -> Unit
 ) {
     val cats = Categories.all
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .padding(horizontal = 18.dp),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(
+            top = contentPadding.calculateTopPadding(),
+            bottom = contentPadding.calculateBottomPadding(),
+            start = 18.dp,
+            end = 18.dp
+        ),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {

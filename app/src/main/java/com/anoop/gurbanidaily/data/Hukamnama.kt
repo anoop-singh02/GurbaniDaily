@@ -74,6 +74,13 @@ object HukamnamaRepo {
         return raw to date
     }
 
+    suspend fun fetchShabadById(id: Long): Result<Hukamnama> = withContext(Dispatchers.IO) {
+        runCatching {
+            val raw = httpGet(shabadEndpoint(id))
+            parseShabadResponse(raw, "")
+        }
+    }
+
     private fun httpGet(url: String): String {
         val conn = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 8_000

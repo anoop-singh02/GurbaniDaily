@@ -47,7 +47,7 @@ fun ShabadCard(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
     onShare: () -> Unit,
-    onListen: () -> Unit,
+    onListen: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -141,20 +141,22 @@ fun ShabadCard(
                                 modifier = Modifier.size(22.dp)
                             )
                         }
-                        FilledTonalButton(
-                            onClick = onListen,
-                            shape = CircleShape
-                        ) {
-                            Icon(
-                                Icons.Filled.PlayArrow,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                "Listen",
-                                style = MaterialTheme.typography.labelLarge
-                            )
+                        if (onListen != null) {
+                            FilledTonalButton(
+                                onClick = onListen,
+                                shape = CircleShape
+                            ) {
+                                Icon(
+                                    Icons.Filled.PlayArrow,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "Listen",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                            }
                         }
                     }
                 }
