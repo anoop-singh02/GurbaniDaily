@@ -35,6 +35,7 @@ data class Hukamnama(
 object HukamnamaRepo {
 
     private const val TODAY_ENDPOINT = "https://api.banidb.com/v2/hukamnamas/today"
+    private fun dateEndpoint(date: String) = "https://api.banidb.com/v2/hukamnamas/$date"
     private fun shabadEndpoint(id: Long) = "https://api.banidb.com/v2/shabads/$id"
     private const val CACHE_FILE = "hukamnama_today.json"
 
@@ -78,6 +79,18 @@ object HukamnamaRepo {
         runCatching {
             val raw = httpGet(shabadEndpoint(id))
             parseShabadResponse(raw, "")
+        }
+    }
+
+    /** date format: yyyy-MM-dd */
+    suspend fun fetchForDate(date: String): Result<Hukamnama> = withContext(Dispatchers.IO) {
+        runCatching {
+            val todayRaw = httpGet(dateEndpoint(date))
+            val (shabadIds, dateLabel) = parseTodayResponse(todayRaw)
+            val firstId = shabadIds.firstOrNull()
+                ?: error("No Hukamnama for $date")
+            val shabadRaw = httpGet(shabadEndpoint(firstId))
+            parseShabadResponse(shabadRaw, dateLabel.ifBlank { formatDate(date) })
         }
     }
 

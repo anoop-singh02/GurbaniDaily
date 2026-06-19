@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -26,6 +27,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -49,8 +52,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.anoop.gurbanidaily.GurbaniApp
+import com.anoop.gurbanidaily.BuildConfig
+import com.anoop.gurbanidaily.data.AutoUpdater
+import com.anoop.gurbanidaily.data.Backup
 import com.anoop.gurbanidaily.data.GurbaniData
 import com.anoop.gurbanidaily.data.ReminderSlot
+import com.anoop.gurbanidaily.data.UpdateInfo
 import com.anoop.gurbanidaily.notifications.ReminderScheduler
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -66,6 +73,43 @@ fun SettingsScreen(onBack: () -> Unit) {
     val dark by prefs.darkMode.collectAsState(initial = false)
     val dynamic by prefs.dynamicColor.collectAsState(initial = true)
     val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
+
+    // Update check state
+    var checkingUpdate by remember { mutableStateOf(false) }
+    var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+    var updateStatus by remember { mutableStateOf<String?>(null) }
+    var downloadProgress by remember { mutableStateOf<Float?>(null) }
+
+    // Backup status
+    var backupStatus by remember { mutableStateOf<String?>(null) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                Backup.exportTo(context, uri, prefs).fold(
+                    onSuccess = { backupStatus = "Exported your data." },
+                    onFailure = { backupStatus = "Export failed: ${it.localizedMessage}" }
+                )
+            }
+        }
+    }
+
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                Backup.importFrom(context, uri, prefs).fold(
+                    onSuccess = { stats ->
+                        backupStatus = "Imported ${stats.favorites} favourites, ${stats.journalEntries} journal entries."
+                    },
+                    onFailure = { backupStatus = "Import failed: ${it.localizedMessage}" }
+                )
+            }
+        }
+    }
 
     var pendingSlot by remember { mutableStateOf<ReminderSlot?>(null) }
     val permLauncher = rememberLauncherForActivityResult(
@@ -203,15 +247,111 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
 
-            SectionCard("About") {
+            SectionCard("Updates") {
                 Text(
-                    "Daily Gurbani — ${GurbaniData.shabads.size} shabads bundled, fully offline.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    "Tap \"Listen on YouTube\" on any shabad to hear it as kirtan.",
+                    "Installed: build ${BuildConfig.VERSION_CODE} · v${BuildConfig.VERSION_NAME}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    FilledTonalButton(
+                        onClick = {
+                            scope.launch {
+                                checkingUpdate = true
+                                updateStatus = null
+                                AutoUpdater.checkForUpdate().fold(
+                                    onSuccess = { info ->
+                                        if (info == null) updateStatus = "You're on the latest build."
+                                        else updateInfo = info
+                                    },
+                                    onFailure = { updateStatus = "Couldn't check: ${it.localizedMessage}" }
+                                )
+                                prefs.setLastUpdateCheck(System.currentTimeMillis())
+                                checkingUpdate = false
+                            }
+                        },
+                        enabled = !checkingUpdate
+                    ) {
+                        if (checkingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(Modifier.padding(4.dp))
+                        }
+                        Text("Check for updates")
+                    }
+                }
+                val info = updateInfo
+                if (info != null) {
+                    Text(
+                        "Update available: ${info.tagName} (build ${info.buildNumber})",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    val prog = downloadProgress
+                    if (prog != null) {
+                        Text(
+                            "Downloading… ${(prog * 100).toInt()}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    FilledTonalButton(onClick = {
+                        scope.launch {
+                            downloadProgress = 0f
+                            AutoUpdater.downloadApk(context, info) { p ->
+                                downloadProgress = p
+                            }.fold(
+                                onSuccess = { file ->
+                                    downloadProgress = null
+                                    AutoUpdater.launchInstaller(context, file)
+                                },
+                                onFailure = {
+                                    downloadProgress = null
+                                    updateStatus = "Download failed: ${it.localizedMessage}"
+                                }
+                            )
+                        }
+                    }) { Text("Download & install") }
+                }
+                if (updateStatus != null) {
+                    Text(
+                        updateStatus!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            SectionCard("Backup") {
+                Text(
+                    "Save your favourites, history, and reflections to a file you control. Restore on a new phone.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FilledTonalButton(onClick = {
+                        exportLauncher.launch("gurbani-daily-backup.json")
+                    }) { Text("Export") }
+                    FilledTonalButton(onClick = {
+                        importLauncher.launch(arrayOf("application/json", "text/plain"))
+                    }) { Text("Import") }
+                }
+                if (backupStatus != null) {
+                    Text(
+                        backupStatus!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            SectionCard("About") {
+                Text(
+                    "Daily Gurbani — ${GurbaniData.shabads.size} shabads bundled offline + full SGGS Ji online.",
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
                     "Waheguru Ji Ka Khalsa, Waheguru Ji Ki Fateh.",

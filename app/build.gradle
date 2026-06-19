@@ -11,8 +11,8 @@ android {
         applicationId "com.anoop.gurbanidaily"
         minSdk 26
         targetSdk 36
-        versionCode 6
-        versionName "3.1"
+        versionCode 7
+        versionName "3.2"
     }
 
     signingConfigs {
@@ -44,6 +44,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
     composeOptions {
         kotlinCompilerExtensionVersion '1.5.14'

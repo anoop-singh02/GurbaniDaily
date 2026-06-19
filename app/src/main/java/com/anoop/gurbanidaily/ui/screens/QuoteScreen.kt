@@ -65,11 +65,16 @@ fun QuoteScreen(contentPadding: PaddingValues) {
     val pagerState = rememberPagerState(initialPage = todayIndex) { shabads.size }
     val favorites by prefs.favorites.collectAsState(initial = emptySet())
     val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
+    val streak by prefs.streak.collectAsState(initial = 0)
     val dateLabel = remember {
         SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH).format(Date())
     }
 
     var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        prefs.touchStreak()
+    }
 
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
@@ -103,7 +108,15 @@ fun QuoteScreen(contentPadding: PaddingValues) {
         ) {
             Spacer(Modifier.height(8.dp))
             DisplayHeader(title = "Today's Quote", subtitle = dateLabel)
-            Spacer(Modifier.height(24.dp))
+            if (streak >= 2) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "🔥 $streak day streak",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            Spacer(Modifier.height(20.dp))
 
             HorizontalPager(
                 state = pagerState,

@@ -106,6 +106,7 @@ private fun LocalShabadBody(contentPadding: androidx.compose.foundation.layout.P
     val scope = rememberCoroutineScope()
     val favorites by prefs.favorites.collectAsState(initial = emptySet())
     val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
+    val journal by prefs.journal.collectAsState(initial = emptyMap())
     val shabad = ShabadPicker.byId(shabadId) ?: return
 
     Column(
@@ -138,7 +139,43 @@ private fun LocalShabadBody(contentPadding: androidx.compose.foundation.layout.P
             },
             onListen = { Listen.openYouTube(context, shabad) }
         )
+        Spacer(Modifier.height(20.dp))
+        JournalEditor(
+            initialText = journal[shabad.id].orEmpty(),
+            onSave = { text -> scope.launch { prefs.setJournalEntry(shabad.id, text) } }
+        )
         Spacer(Modifier.height(48.dp))
+    }
+}
+
+@Composable
+private fun JournalEditor(initialText: String, onSave: (String) -> Unit) {
+    var text by remember(initialText) { mutableStateOf(initialText) }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(16.dp)) {
+            Text(
+                "Your reflection (private)",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.height(8.dp))
+            androidx.compose.material3.OutlinedTextField(
+                value = text,
+                onValueChange = {
+                    text = it
+                    onSave(it)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("What did this shabad mean to you today?") },
+                minLines = 3,
+                shape = RoundedCornerShape(14.dp)
+            )
+        }
     }
 }
 

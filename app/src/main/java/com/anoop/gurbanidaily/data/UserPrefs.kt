@@ -6,10 +6,16 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 private val Context.dataStore by preferencesDataStore(name = "gurbani_prefs")
 
@@ -29,6 +35,10 @@ class UserPrefs(private val context: Context) {
     private val keyFavorites = stringSetPreferencesKey("favorites")
     private val keyHistoryOrdered = stringSetPreferencesKey("history_ordered")
     private val keyOnboarded = booleanPreferencesKey("onboarded")
+    private val keyStreak = intPreferencesKey("streak_days")
+    private val keyLastOpenedDate = stringPreferencesKey("last_opened_date")
+    private val keyJournal = stringPreferencesKey("journal_json")
+    private val keyLastUpdateCheck = longPreferencesKey("last_update_check_ms")
 
     private fun slotEnabledKey(slot: ReminderSlot) = booleanPreferencesKey("reminder_${slot.key}_on")
     private fun slotHourKey(slot: ReminderSlot) = intPreferencesKey("reminder_${slot.key}_h")
@@ -40,6 +50,15 @@ class UserPrefs(private val context: Context) {
     val favorites: Flow<Set<String>> = context.dataStore.data.map { it[keyFavorites] ?: emptySet() }
     val history: Flow<List<String>> = context.dataStore.data.map { prefs -> prefs.historyList() }
     val onboarded: Flow<Boolean> = context.dataStore.data.map { it[keyOnboarded] ?: false }
+    val streak: Flow<Int> = context.dataStore.data.map { it[keyStreak] ?: 0 }
+    val journal: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
+        val raw = prefs[keyJournal] ?: return@map emptyMap()
+        runCatching {
+            val obj = JSONObject(raw)
+            obj.keys().asSequence().associateWith { k -> obj.optString(k, "") }
+        }.getOrDefault(emptyMap())
+    }
+    val lastUpdateCheck: Flow<Long> = context.dataStore.data.map { it[keyLastUpdateCheck] ?: 0L }
 
     fun reminder(slot: ReminderSlot): Flow<ReminderState> = context.dataStore.data.map { prefs ->
         ReminderState(
@@ -77,6 +96,46 @@ class UserPrefs(private val context: Context) {
     }
 
     suspend fun clearHistory() = context.dataStore.edit { it[keyHistoryOrdered] = emptySet() }
+
+    suspend fun touchStreak() = context.dataStore.edit { prefs ->
+        val today = todayKey()
+        val last = prefs[keyLastOpenedDate]
+        val current = prefs[keyStreak] ?: 0
+        val newStreak = when (last) {
+            today -> current.coerceAtLeast(1)
+            yesterdayKey() -> current + 1
+            else -> 1
+        }
+        prefs[keyStreak] = newStreak
+        prefs[keyLastOpenedDate] = today
+    }
+
+    suspend fun setJournalEntry(shabadId: String, text: String) = context.dataStore.edit { prefs ->
+        val raw = prefs[keyJournal] ?: "{}"
+        val obj = runCatching { JSONObject(raw) }.getOrDefault(JSONObject())
+        if (text.isBlank()) obj.remove(shabadId) else obj.put(shabadId, text)
+        prefs[keyJournal] = obj.toString()
+    }
+
+    suspend fun setLastUpdateCheck(ms: Long) =
+        context.dataStore.edit { it[keyLastUpdateCheck] = ms }
+
+    suspend fun replaceFavorites(ids: Set<String>) =
+        context.dataStore.edit { it[keyFavorites] = ids }
+
+    suspend fun replaceJournal(map: Map<String, String>) = context.dataStore.edit { prefs ->
+        val obj = JSONObject()
+        map.forEach { (k, v) -> obj.put(k, v) }
+        prefs[keyJournal] = obj.toString()
+    }
+
+    private fun todayKey(): String =
+        SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(Calendar.getInstance().time)
+
+    private fun yesterdayKey(): String {
+        val c = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+        return SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(c.time)
+    }
 
     private fun Preferences.historyList(): List<String> {
         val raw = this[keyHistoryOrdered] ?: emptySet()

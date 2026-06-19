@@ -1,5 +1,6 @@
 package com.anoop.gurbanidaily.ui.screens
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -20,12 +21,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,18 +43,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anoop.gurbanidaily.data.Hukamnama
 import com.anoop.gurbanidaily.data.HukamnamaRepo
+import com.anoop.gurbanidaily.data.HukamnamaVerse
 import com.anoop.gurbanidaily.ui.components.DisplayHeader
 import com.anoop.gurbanidaily.ui.components.PillChip
-import com.anoop.gurbanidaily.ui.components.ThreeDotDivider
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun HukamnamaScreen(contentPadding: PaddingValues) {
@@ -61,10 +68,12 @@ fun HukamnamaScreen(contentPadding: PaddingValues) {
     var hukamnama by remember { mutableStateOf<Hukamnama?>(null) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var selectedDate by remember { mutableStateOf<Calendar?>(null) }
 
-    fun reload(force: Boolean) {
+    fun loadToday(force: Boolean) {
         loading = true
         error = null
+        selectedDate = null
         scope.launch {
             val result = if (force) HukamnamaRepo.fetchToday(context)
             else HukamnamaRepo.loadCachedOrFetch(context)
@@ -76,7 +85,21 @@ fun HukamnamaScreen(contentPadding: PaddingValues) {
         }
     }
 
-    LaunchedEffect(Unit) { reload(force = false) }
+    fun loadDate(cal: Calendar) {
+        loading = true
+        error = null
+        selectedDate = cal
+        val date = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(cal.time)
+        scope.launch {
+            HukamnamaRepo.fetchForDate(date).fold(
+                onSuccess = { hukamnama = it; error = null },
+                onFailure = { error = it.localizedMessage ?: "Couldn't load for $date." }
+            )
+            loading = false
+        }
+    }
+
+    LaunchedEffect(Unit) { loadToday(force = false) }
 
     Column(
         modifier = Modifier
@@ -91,21 +114,56 @@ fun HukamnamaScreen(contentPadding: PaddingValues) {
             title = "Hukamnama",
             subtitle = "Sri Harmandir Sahib · Amritsar"
         )
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FilledTonalButton(
+                onClick = {
+                    val now = Calendar.getInstance()
+                    val start = selectedDate ?: now
+                    DatePickerDialog(
+                        context,
+                        { _, y, m, d ->
+                            val c = Calendar.getInstance().apply { set(y, m, d) }
+                            loadDate(c)
+                        },
+                        start.get(Calendar.YEAR),
+                        start.get(Calendar.MONTH),
+                        start.get(Calendar.DAY_OF_MONTH)
+                    ).apply {
+                        datePicker.maxDate = now.timeInMillis
+                    }.show()
+                },
+                shape = CircleShape
+            ) {
+                Icon(Icons.Outlined.CalendarMonth, contentDescription = null,
+                    modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(if (selectedDate != null) "Change date" else "Past Hukamnamas")
+            }
+            if (selectedDate != null) {
+                FilledTonalButton(
+                    onClick = { loadToday(force = true) },
+                    shape = CircleShape
+                ) { Text("Today") }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
 
         when {
-            loading && hukamnama == null -> {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(48.dp),
-                    contentAlignment = Alignment.Center
-                ) { CircularProgressIndicator() }
-            }
+            loading && hukamnama == null -> Box(
+                modifier = Modifier.fillMaxWidth().padding(48.dp),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator() }
             hukamnama != null -> HukamnamaCard(
                 hukamnama = hukamnama!!,
-                onReload = { reload(force = true) },
+                onReload = {
+                    if (selectedDate != null) loadDate(selectedDate!!) else loadToday(force = true)
+                },
                 isRefreshing = loading
             )
-            error != null -> ErrorCard(message = error!!, onReload = { reload(force = true) })
+            error != null -> ErrorCard(message = error!!, onReload = { loadToday(force = true) })
         }
         Spacer(Modifier.height(120.dp))
     }
@@ -125,7 +183,7 @@ private fun HukamnamaCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 26.dp),
+            modifier = Modifier.padding(horizontal = 22.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -147,64 +205,42 @@ private fun HukamnamaCard(
                 }
             }
 
-            if (hukamnama.ang.isNotEmpty() || hukamnama.raag.isNotEmpty() || hukamnama.writer.isNotEmpty()) {
+            if (hukamnama.ang.isNotEmpty() || hukamnama.raag.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (hukamnama.raag.isNotEmpty()) PillChip("Raag ${hukamnama.raag}")
                     if (hukamnama.ang.isNotEmpty()) PillChip(hukamnama.ang)
                 }
-                if (hukamnama.writer.isNotEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        hukamnama.writer,
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
             }
-
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                hukamnama.combinedGurmukhi,
-                fontSize = 24.sp,
-                lineHeight = 40.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.primary
-            )
-
-            if (hukamnama.verses.any { it.transliteration.isNotBlank() }) {
-                Spacer(Modifier.height(16.dp))
+            if (hukamnama.writer.isNotEmpty()) {
+                Spacer(Modifier.height(6.dp))
                 Text(
-                    hukamnama.combinedTransliteration,
-                    fontSize = 13.sp,
-                    lineHeight = 22.sp,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (hukamnama.combinedMeaning.isNotBlank()) {
-                Spacer(Modifier.height(20.dp))
-                ThreeDotDivider()
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    hukamnama.combinedMeaning,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
+                    hukamnama.writer,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
 
             Spacer(Modifier.height(22.dp))
 
+            hukamnama.verses.forEachIndexed { i, verse ->
+                VerseBlock(verse)
+                if (i < hukamnama.verses.lastIndex) {
+                    Spacer(Modifier.height(18.dp))
+                    HorizontalDivider(
+                        Modifier.fillMaxWidth(0.35f),
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                    Spacer(Modifier.height(18.dp))
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
+
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilledTonalButton(
                     onClick = {
-                        val q = "Hukamnama Sahib Sri Harmandir Sahib today kirtan"
+                        val q = "Hukamnama Sahib Sri Harmandir Sahib ${hukamnama.dateLabel} kirtan"
                         val url = "https://www.youtube.com/results?search_query=" +
                             URLEncoder.encode(q, StandardCharsets.UTF_8.toString())
                         context.startActivity(
@@ -214,14 +250,16 @@ private fun HukamnamaCard(
                     },
                     shape = CircleShape
                 ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Filled.PlayArrow, contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(Modifier.width(8.dp))
                     Text("Listen on YouTube")
                 }
                 IconButton(onClick = {
-                    val text =
-                        "Hukamnama Sahib — ${hukamnama.dateLabel}\n\n" +
-                            "${hukamnama.combinedGurmukhi}\n\n${hukamnama.combinedMeaning}"
+                    val text = "Hukamnama Sahib — ${hukamnama.dateLabel}\n\n" +
+                        "${hukamnama.combinedGurmukhi}\n\n${hukamnama.combinedMeaning}"
                     context.startActivity(
                         Intent.createChooser(
                             Intent(Intent.ACTION_SEND).apply {
@@ -248,6 +286,40 @@ private fun HukamnamaCard(
 }
 
 @Composable
+private fun VerseBlock(verse: HukamnamaVerse) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            verse.gurmukhi,
+            fontSize = 22.sp,
+            lineHeight = 36.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        if (verse.transliteration.isNotBlank()) {
+            Spacer(Modifier.height(10.dp))
+            Text(
+                verse.transliteration,
+                fontSize = 13.sp,
+                lineHeight = 22.sp,
+                textAlign = TextAlign.Center,
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        if (verse.englishMeaning.isNotBlank()) {
+            Spacer(Modifier.height(12.dp))
+            Text(
+                verse.englishMeaning,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
 private fun ErrorCard(message: String, onReload: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -257,7 +329,7 @@ private fun ErrorCard(message: String, onReload: () -> Unit) {
             modifier = Modifier.padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Couldn't load today's Hukamnama", style = MaterialTheme.typography.titleLarge)
+            Text("Couldn't load this Hukamnama", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(8.dp))
             Text(
                 message,
@@ -267,7 +339,8 @@ private fun ErrorCard(message: String, onReload: () -> Unit) {
             )
             Spacer(Modifier.height(16.dp))
             FilledTonalButton(onClick = onReload, shape = CircleShape) {
-                Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.Refresh, contentDescription = null,
+                    modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text("Try again")
             }

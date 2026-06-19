@@ -5,15 +5,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import androidx.navigation.NavType
+import com.anoop.gurbanidaily.ui.screens.AngBrowseScreen
 import com.anoop.gurbanidaily.ui.screens.CategoryScreen
 import com.anoop.gurbanidaily.ui.screens.FavoritesScreen
 import com.anoop.gurbanidaily.ui.screens.HistoryScreen
 import com.anoop.gurbanidaily.ui.screens.MainScaffold
+import com.anoop.gurbanidaily.ui.screens.RaagsScreen
 import com.anoop.gurbanidaily.ui.screens.SearchScreen
 import com.anoop.gurbanidaily.ui.screens.SettingsScreen
 import com.anoop.gurbanidaily.ui.screens.ShabadReaderScreen
@@ -36,7 +38,8 @@ fun AppNavigation() {
                 onOpenSettings = { nav.navigate(Dest.Settings.route) },
                 onOpenSearch = { nav.navigate(Dest.Search.route) },
                 onOpenCategory = { id -> nav.navigate(Dest.Category.build(id)) },
-                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) },
+                onOpenRaags = { nav.navigate(Dest.Raags.route) }
             )
         }
         composable(Dest.Favorites.route) {
@@ -58,6 +61,20 @@ fun AppNavigation() {
             )
         }
         composable(Dest.Settings.route) { SettingsScreen(onBack = { nav.popBackStack() }) }
+        composable(Dest.Raags.route) {
+            RaagsScreen(
+                onBack = { nav.popBackStack() },
+                onOpenRaag = { raag ->
+                    nav.navigate(
+                        Dest.AngBrowse.build(
+                            start = raag.angStart.coerceAtLeast(1),
+                            end = raag.angEnd,
+                            raag = "Raag ${raag.english}"
+                        )
+                    )
+                }
+            )
+        }
         composable(
             route = Dest.Category.route,
             arguments = listOf(navArgument("id") { type = NavType.StringType })
@@ -75,6 +92,28 @@ fun AppNavigation() {
         ) { backStack ->
             val id = backStack.arguments?.getString("id") ?: return@composable
             ShabadReaderScreen(shabadId = id, onBack = { nav.popBackStack() })
+        }
+        composable(
+            route = Dest.AngBrowse.route,
+            arguments = listOf(
+                navArgument("start") { type = NavType.IntType; defaultValue = 1 },
+                navArgument("end") { type = NavType.IntType; defaultValue = 0 },
+                navArgument("raag") { type = NavType.StringType; defaultValue = "" }
+            )
+        ) { backStack ->
+            val start = backStack.arguments?.getInt("start") ?: 1
+            val end = backStack.arguments?.getInt("end") ?: 0
+            val raag = java.net.URLDecoder.decode(
+                backStack.arguments?.getString("raag") ?: "",
+                "UTF-8"
+            )
+            AngBrowseScreen(
+                startAng = start,
+                endAng = end,
+                raagName = raag,
+                onBack = { nav.popBackStack() },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
+            )
         }
     }
 }
