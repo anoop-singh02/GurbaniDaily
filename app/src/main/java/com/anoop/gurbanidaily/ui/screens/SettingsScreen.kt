@@ -55,7 +55,6 @@ import com.anoop.gurbanidaily.GurbaniApp
 import com.anoop.gurbanidaily.BuildConfig
 import com.anoop.gurbanidaily.data.AutoUpdater
 import com.anoop.gurbanidaily.data.Backup
-import com.anoop.gurbanidaily.data.GurbaniData
 import com.anoop.gurbanidaily.data.ReminderSlot
 import com.anoop.gurbanidaily.data.UpdateInfo
 import com.anoop.gurbanidaily.notifications.ReminderScheduler
@@ -350,7 +349,7 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             SectionCard("About") {
                 Text(
-                    "Daily Gurbani — ${GurbaniData.shabads.size} shabads bundled offline + full SGGS Ji online.",
+                    "Daily Gurbani — full Sri Guru Granth Sahib Ji via BaniDB.",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(

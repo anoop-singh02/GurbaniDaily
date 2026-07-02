@@ -1,35 +1,29 @@
 package com.anoop.gurbanidaily.ui.screens
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -49,23 +43,50 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.anoop.gurbanidaily.GurbaniApp
-import com.anoop.gurbanidaily.data.Hukamnama
-import com.anoop.gurbanidaily.data.HukamnamaRepo
-import com.anoop.gurbanidaily.data.Listen
-import com.anoop.gurbanidaily.data.ShabadPicker
+import com.anoop.gurbanidaily.data.OnlineShabad
+import com.anoop.gurbanidaily.data.PreviewCache
+import com.anoop.gurbanidaily.data.SavedShabadPreview
+import com.anoop.gurbanidaily.data.ShabadApi
 import com.anoop.gurbanidaily.ui.components.GradientBackdrop
-import com.anoop.gurbanidaily.ui.components.PillChip
-import com.anoop.gurbanidaily.ui.components.ShabadCard
-import com.anoop.gurbanidaily.ui.components.ThreeDotDivider
+import com.anoop.gurbanidaily.ui.components.OnlineShabadCard
 import kotlinx.coroutines.launch
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShabadReaderScreen(shabadId: String, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val app = context.applicationContext as GurbaniApp
+    val prefs = app.prefs
+    val scope = rememberCoroutineScope()
+    val favorites by prefs.favorites.collectAsState(initial = emptySet())
+    val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
+    val journal by prefs.journal.collectAsState(initial = emptyMap())
+
+    val id = shabadId.removePrefix("online:").toLongOrNull()
+    var shabad by remember { mutableStateOf<OnlineShabad?>(null) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(id) {
+        if (id == null) {
+            error = "Invalid shabad ID"
+            loading = false
+            return@LaunchedEffect
+        }
+        loading = true
+        error = null
+        ShabadApi.fetchById(id).fold(
+            onSuccess = {
+                shabad = it
+                prefs.pushHistory(it.shabadId)
+                PreviewCache.save(context, SavedShabadPreview.from(it))
+                loading = false
+            },
+            onFailure = { error = it.localizedMessage ?: "Couldn't load."; loading = false }
+        )
+    }
+
     GradientBackdrop(darkTheme = isSystemInDarkTheme()) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -80,53 +101,16 @@ fun ShabadReaderScreen(shabadId: String, onBack: () -> Unit) {
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    )
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             }
-        ) { padding ->
-            if (shabadId.startsWith("online:")) {
-                val onlineId = shabadId.removePrefix("online:").toLongOrNull()
-                if (onlineId != null) {
-                    OnlineShabadBody(padding, onlineId)
-                }
-            } else {
-                LocalShabadBody(padding, shabadId)
-            }
-        }
-    }
-}
-
-@Composable
-private fun LocalShabadBody(contentPadding: androidx.compose.foundation.layout.PaddingValues, shabadId: String) {
-    val context = LocalContext.current
-    val app = context.applicationContext as GurbaniApp
-    val prefs = app.prefs
-    val scope = rememberCoroutineScope()
-    val favorites by prefs.favorites.collectAsState(initial = emptySet())
-    val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
-    val journal by prefs.journal.collectAsState(initial = emptyMap())
-    val shabad = ShabadPicker.byId(shabadId) ?: return
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
-    ) {
-        Spacer(Modifier.height(8.dp))
-        ShabadCard(
-            shabad = shabad,
-            fontScale = fontScale,
-            isFavorite = shabad.id in favorites,
-            onToggleFavorite = { scope.launch { prefs.toggleFavorite(shabad.id) } },
-            onShare = {
-                val text = "${shabad.gurmukhi}\n\n${shabad.transliteration}\n\n" +
-                    "${shabad.meaning}\n\n— ${shabad.source}"
+        ) { padding -> Body(padding, shabad, loading, error, favorites, fontScale,
+            journalText = shabad?.let { journal[it.shabadId] }.orEmpty(),
+            onToggleFav = { s ->
+                scope.launch { prefs.toggleFavorite(s.shabadId) }
+            },
+            onShare = { s ->
+                val text = "${s.allGurmukhi}\n\n${s.allEnglish}\n\n— ${s.sourceLabel}"
                 context.startActivity(
                     Intent.createChooser(
                         Intent(Intent.ACTION_SEND).apply {
@@ -137,13 +121,60 @@ private fun LocalShabadBody(contentPadding: androidx.compose.foundation.layout.P
                     )
                 )
             },
-            onListen = { Listen.openYouTube(context, shabad) }
-        )
-        Spacer(Modifier.height(20.dp))
-        JournalEditor(
-            initialText = journal[shabad.id].orEmpty(),
-            onSave = { text -> scope.launch { prefs.setJournalEntry(shabad.id, text) } }
-        )
+            onJournal = { s, text -> scope.launch { prefs.setJournalEntry(s.shabadId, text) } }
+        )}
+    }
+}
+
+@Composable
+private fun Body(
+    contentPadding: PaddingValues,
+    shabad: OnlineShabad?,
+    loading: Boolean,
+    error: String?,
+    favorites: Set<Long>,
+    fontScale: Float,
+    journalText: String,
+    onToggleFav: (OnlineShabad) -> Unit,
+    onShare: (OnlineShabad) -> Unit,
+    onJournal: (OnlineShabad, String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Spacer(Modifier.height(8.dp))
+        when {
+            loading -> Box(
+                Modifier.fillMaxWidth().padding(48.dp),
+                contentAlignment = Alignment.Center
+            ) { CircularProgressIndicator() }
+            error != null -> Text(
+                error,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            shabad != null -> {
+                OnlineShabadCard(
+                    shabad = shabad,
+                    fontScale = fontScale,
+                    isFavorite = shabad.shabadId in favorites,
+                    onToggleFavorite = { onToggleFav(shabad) },
+                    onShare = { onShare(shabad) }
+                )
+                Spacer(Modifier.height(20.dp))
+                JournalEditor(
+                    initialText = journalText,
+                    onSave = { onJournal(shabad, it) }
+                )
+            }
+        }
         Spacer(Modifier.height(48.dp))
     }
 }
@@ -164,7 +195,7 @@ private fun JournalEditor(initialText: String, onSave: (String) -> Unit) {
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.height(8.dp))
-            androidx.compose.material3.OutlinedTextField(
+            OutlinedTextField(
                 value = text,
                 onValueChange = {
                     text = it
@@ -175,150 +206,6 @@ private fun JournalEditor(initialText: String, onSave: (String) -> Unit) {
                 minLines = 3,
                 shape = RoundedCornerShape(14.dp)
             )
-        }
-    }
-}
-
-@Composable
-private fun OnlineShabadBody(
-    contentPadding: androidx.compose.foundation.layout.PaddingValues,
-    shabadId: Long
-) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    var shabad by remember { mutableStateOf<Hukamnama?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var loading by remember { mutableStateOf(true) }
-
-    LaunchedEffect(shabadId) {
-        loading = true
-        error = null
-        scope.launch {
-            HukamnamaRepo.fetchShabadById(shabadId).fold(
-                onSuccess = { shabad = it; loading = false },
-                onFailure = { error = it.localizedMessage ?: "Couldn't load shabad."; loading = false }
-            )
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(Modifier.height(8.dp))
-        when {
-            loading -> Box(
-                Modifier.fillMaxWidth().padding(48.dp),
-                contentAlignment = Alignment.Center
-            ) { CircularProgressIndicator() }
-            error != null -> Text(
-                error!!,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
-            )
-            shabad != null -> OnlineShabadCard(shabad!!, context)
-        }
-        Spacer(Modifier.height(48.dp))
-    }
-}
-
-@Composable
-private fun OnlineShabadCard(hukamnama: Hukamnama, context: android.content.Context) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 22.dp, vertical = 26.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (hukamnama.raag.isNotBlank()) PillChip("Raag ${hukamnama.raag}")
-                if (hukamnama.ang.isNotBlank()) PillChip(hukamnama.ang)
-            }
-            if (hukamnama.writer.isNotBlank()) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    hukamnama.writer,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
-            Spacer(Modifier.height(20.dp))
-            Text(
-                hukamnama.combinedGurmukhi,
-                fontSize = 22.sp,
-                lineHeight = 36.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            if (hukamnama.combinedTransliteration.isNotBlank()) {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    hukamnama.combinedTransliteration,
-                    fontSize = 13.sp,
-                    lineHeight = 22.sp,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (hukamnama.combinedMeaning.isNotBlank()) {
-                Spacer(Modifier.height(20.dp))
-                ThreeDotDivider()
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    hukamnama.combinedMeaning,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(Modifier.height(24.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FilledTonalButton(
-                    onClick = {
-                        val q = hukamnama.verses.firstOrNull()?.gurmukhi.orEmpty() +
-                            " kirtan ${hukamnama.writer}"
-                        val url = "https://www.youtube.com/results?search_query=" +
-                            URLEncoder.encode(q, StandardCharsets.UTF_8.toString())
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    },
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        Icons.Filled.PlayArrow,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Listen on YouTube")
-                }
-                IconButton(onClick = {
-                    val text = "${hukamnama.combinedGurmukhi}\n\n${hukamnama.combinedMeaning}\n\n— ${hukamnama.writer}"
-                    context.startActivity(
-                        Intent.createChooser(
-                            Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, text)
-                            },
-                            "Share Shabad"
-                        )
-                    )
-                }) {
-                    Icon(Icons.Outlined.Share, contentDescription = "Share")
-                }
-            }
         }
     }
 }

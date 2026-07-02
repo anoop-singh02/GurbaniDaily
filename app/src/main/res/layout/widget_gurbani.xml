@@ -11,19 +11,19 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <TextView
-            android:id="@+id/widget_gurmukhi"
+            android:id="@+id/widget_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:text="Daily Gurbani"
             android:textColor="#B85C16"
-            android:textSize="18sp"
+            android:textSize="12sp"
             android:textStyle="bold"
-            android:maxLines="2"
-            android:ellipsize="end"
-            tools:text="ਜੋ ਤੁਧੁ ਭਾਵੈ ਸਾਈ ਭਲੀ ਕਾਰ ॥" />
+            android:letterSpacing="0.08" />
 
         <TextView
             android:id="@+id/widget_refresh"
@@ -37,14 +37,15 @@
     </LinearLayout>
 
     <TextView
-        android:id="@+id/widget_meaning"
+        android:id="@+id/widget_english"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:textColor="#2C2C2A"
-        android:textSize="13sp"
-        android:maxLines="4"
+        android:textSize="14sp"
+        android:lineSpacingExtra="3sp"
+        android:maxLines="5"
         android:ellipsize="end"
         tools:text="Whatever pleases You is the only good deed." />
 
@@ -52,12 +53,12 @@
         android:id="@+id/widget_source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
+        android:layout_marginTop="8dp"
         android:textColor="#1A3A5C"
         android:textSize="11sp"
         android:textStyle="bold"
         android:maxLines="1"
         android:ellipsize="end"
-        tools:text="Japji Sahib — Guru Nanak Dev Ji" />
+        tools:text="Guru Nanak Dev Ji · Ang 3" />
 
 </LinearLayout>

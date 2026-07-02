@@ -10,14 +10,13 @@ import java.nio.charset.StandardCharsets
 
 data class OnlineSearchResult(
     val shabadId: Long,
-    val gurmukhi: String,
+    val gurmukhi: String,        // Unicode ਗੁਰਮੁਖੀ
     val englishMeaning: String,
     val source: String
 )
 
 object OnlineSearch {
 
-    // BaniDB search type 3 = English-text search across SGGSJ
     suspend fun searchEnglish(query: String): Result<List<OnlineSearchResult>> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -25,12 +24,11 @@ object OnlineSearch {
                 val url = URL("https://api.banidb.com/v2/search/$q/3?source=G")
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 8_000
-                    readTimeout = 12_000
+                    readTimeout = 15_000
                     setRequestProperty("Accept", "application/json")
-                    setRequestProperty("User-Agent", "GurbaniDaily/3.0")
+                    setRequestProperty("User-Agent", "GurbaniDaily/4.0")
                 }
-                val raw = conn.inputStream.bufferedReader().use { it.readText() }
-                parse(raw)
+                parse(conn.inputStream.bufferedReader().use { it.readText() })
             }
         }
 
@@ -43,26 +41,35 @@ object OnlineSearch {
             val shabadId = v.optLong("shabadId", -1L)
             if (shabadId <= 0L) continue
             val verse = v.optJSONObject("verse")
-            val gurmukhi = verse?.optString("gurmukhi", "") ?: ""
+            val gurmukhi = firstNonBlank(
+                verse?.optString("unicode", ""),
+                v.optString("unicode", ""),
+                verse?.optString("gurmukhi", "")
+            )
             val englishMeaning = v.optJSONObject("translation")
-                ?.optJSONObject("en")?.optString("bdb", "") ?: ""
-            val writer = v.optJSONObject("writer")?.optString("english", "") ?: ""
-            val raag = v.optJSONObject("raag")?.optString("english", "") ?: ""
+                ?.optJSONObject("en")?.optString("bdb", "").orEmpty()
+            val writer = v.optJSONObject("writer")?.optString("english", "").orEmpty()
+            val raag = v.optJSONObject("raag")?.optString("english", "").orEmpty()
             val ang = v.optInt("pageNo", 0)
-            val sourceParts = listOfNotNull(
+            val parts = listOfNotNull(
                 writer.takeIf { it.isNotBlank() },
                 raag.takeIf { it.isNotBlank() }?.let { "Raag $it" },
                 if (ang > 0) "Ang $ang" else null
             )
-            out.add(
-                OnlineSearchResult(
-                    shabadId = shabadId,
-                    gurmukhi = gurmukhi,
-                    englishMeaning = englishMeaning,
-                    source = sourceParts.joinToString(" · ")
+            if (gurmukhi.isNotBlank()) {
+                out.add(
+                    OnlineSearchResult(
+                        shabadId = shabadId,
+                        gurmukhi = gurmukhi,
+                        englishMeaning = englishMeaning,
+                        source = parts.joinToString(" · ")
+                    )
                 )
-            )
+            }
         }
         return out
     }
+
+    private fun firstNonBlank(vararg values: String?): String =
+        values.firstOrNull { !it.isNullOrBlank() }?.trim().orEmpty()
 }

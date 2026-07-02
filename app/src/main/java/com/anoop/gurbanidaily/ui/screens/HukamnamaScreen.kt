@@ -2,7 +2,6 @@ package com.anoop.gurbanidaily.ui.screens
 
 import android.app.DatePickerDialog
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
@@ -43,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,8 +51,6 @@ import com.anoop.gurbanidaily.data.HukamnamaVerse
 import com.anoop.gurbanidaily.ui.components.DisplayHeader
 import com.anoop.gurbanidaily.ui.components.PillChip
 import kotlinx.coroutines.launch
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -111,10 +106,10 @@ fun HukamnamaScreen(contentPadding: PaddingValues) {
     ) {
         Spacer(Modifier.height(8.dp))
         DisplayHeader(
-            title = "Hukamnama",
+            title = "Hukamnama Sahib",
             subtitle = "Sri Harmandir Sahib · Amritsar"
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(14.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             FilledTonalButton(
@@ -235,28 +230,9 @@ private fun HukamnamaCard(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                FilledTonalButton(
-                    onClick = {
-                        val q = "Hukamnama Sahib Sri Harmandir Sahib ${hukamnama.dateLabel} kirtan"
-                        val url = "https://www.youtube.com/results?search_query=" +
-                            URLEncoder.encode(q, StandardCharsets.UTF_8.toString())
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        )
-                    },
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        Icons.Filled.PlayArrow, contentDescription = null,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("Listen on YouTube")
-                }
                 IconButton(onClick = {
                     val text = "Hukamnama Sahib — ${hukamnama.dateLabel}\n\n" +
                         "${hukamnama.combinedGurmukhi}\n\n${hukamnama.combinedMeaning}"
@@ -290,25 +266,24 @@ private fun VerseBlock(verse: HukamnamaVerse) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             verse.gurmukhi,
-            fontSize = 22.sp,
-            lineHeight = 36.sp,
+            fontSize = 24.sp,
+            lineHeight = 40.sp,
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.primary
         )
-        if (verse.transliteration.isNotBlank()) {
-            Spacer(Modifier.height(10.dp))
+        if (verse.punjabiMeaning.isNotBlank()) {
+            Spacer(Modifier.height(14.dp))
             Text(
-                verse.transliteration,
-                fontSize = 13.sp,
-                lineHeight = 22.sp,
+                verse.punjabiMeaning,
+                fontSize = 16.sp,
+                lineHeight = 26.sp,
                 textAlign = TextAlign.Center,
-                fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         if (verse.englishMeaning.isNotBlank()) {
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(14.dp))
             Text(
                 verse.englishMeaning,
                 style = MaterialTheme.typography.bodyLarge,

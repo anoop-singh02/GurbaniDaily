@@ -13,10 +13,9 @@ import java.util.Calendar
 import java.util.Locale
 
 data class HukamnamaVerse(
-    val gurmukhi: String,
-    val transliteration: String,
+    val gurmukhi: String,           // Unicode ਗੁਰਮੁਖੀ
     val englishMeaning: String,
-    val punjabiMeaning: String
+    val punjabiMeaning: String      // Punjabi translation in Unicode
 )
 
 data class Hukamnama(
@@ -27,9 +26,8 @@ data class Hukamnama(
     val verses: List<HukamnamaVerse>
 ) {
     val combinedGurmukhi: String get() = verses.joinToString("\n") { it.gurmukhi }
-    val combinedTransliteration: String
-        get() = verses.joinToString("\n") { it.transliteration }
     val combinedMeaning: String get() = verses.joinToString("\n") { it.englishMeaning }
+    val combinedPunjabi: String get() = verses.joinToString("\n") { it.punjabiMeaning }
 }
 
 object HukamnamaRepo {
@@ -43,26 +41,41 @@ object HukamnamaRepo {
         runCatching {
             val todayRaw = httpGet(TODAY_ENDPOINT)
             val (shabadIds, dateLabel) = parseTodayResponse(todayRaw)
-            val firstId = shabadIds.firstOrNull()
-                ?: error("No shabad IDs returned by BaniDB today endpoint")
+            val firstId = shabadIds.firstOrNull() ?: error("No Hukamnama returned")
             val shabadRaw = httpGet(shabadEndpoint(firstId))
             val hukamnama = parseShabadResponse(shabadRaw, dateLabel)
             File(context.filesDir, CACHE_FILE).writeText(shabadRaw + "|||DATE|||" + dateLabel)
             hukamnama
         }.recoverCatching {
             val cached = cachedRaw(context) ?: throw it
-            val (raw, date) = cached
-            parseShabadResponse(raw, date)
+            parseShabadResponse(cached.first, cached.second)
         }
     }
 
     suspend fun loadCachedOrFetch(context: Context): Result<Hukamnama> = withContext(Dispatchers.IO) {
         val cached = cachedRaw(context)
-        if (cached != null) {
+        // Only serve the cache if it's for today. Otherwise re-fetch so the
+        // Hukamnama tab always shows today's Hukamnama from Sri Harmandir Sahib.
+        if (cached != null && cached.second == formatToday()) {
             val parsed = runCatching { parseShabadResponse(cached.first, cached.second) }
             if (parsed.isSuccess) return@withContext parsed
         }
         fetchToday(context)
+    }
+
+    suspend fun fetchShabadById(id: Long): Result<Hukamnama> = withContext(Dispatchers.IO) {
+        runCatching { parseShabadResponse(httpGet(shabadEndpoint(id)), "") }
+    }
+
+    /** yyyy-MM-dd */
+    suspend fun fetchForDate(date: String): Result<Hukamnama> = withContext(Dispatchers.IO) {
+        runCatching {
+            val raw = httpGet(dateEndpoint(date))
+            val (shabadIds, label) = parseTodayResponse(raw)
+            val id = shabadIds.firstOrNull() ?: error("No Hukamnama for $date")
+            val shabadRaw = httpGet(shabadEndpoint(id))
+            parseShabadResponse(shabadRaw, label.ifBlank { formatDate(date) })
+        }
     }
 
     private fun cachedRaw(context: Context): Pair<String, String>? {
@@ -75,55 +88,20 @@ object HukamnamaRepo {
         return raw to date
     }
 
-    suspend fun fetchShabadById(id: Long): Result<Hukamnama> = withContext(Dispatchers.IO) {
-        runCatching {
-            val raw = httpGet(shabadEndpoint(id))
-            parseShabadResponse(raw, "")
-        }
-    }
-
-    /** date format: yyyy-MM-dd */
-    suspend fun fetchForDate(date: String): Result<Hukamnama> = withContext(Dispatchers.IO) {
-        runCatching {
-            val todayRaw = httpGet(dateEndpoint(date))
-            val (shabadIds, dateLabel) = parseTodayResponse(todayRaw)
-            val firstId = shabadIds.firstOrNull()
-                ?: error("No Hukamnama for $date")
-            val shabadRaw = httpGet(shabadEndpoint(firstId))
-            parseShabadResponse(shabadRaw, dateLabel.ifBlank { formatDate(date) })
-        }
-    }
-
-    private fun httpGet(url: String): String {
-        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 8_000
-            readTimeout = 12_000
-            setRequestProperty("Accept", "application/json")
-            setRequestProperty("User-Agent", "GurbaniDaily/3.0")
-        }
-        return conn.inputStream.bufferedReader().use { it.readText() }
-    }
-
     private fun parseTodayResponse(raw: String): Pair<List<Long>, String> {
         val root = JSONObject(raw)
         val ids = mutableListOf<Long>()
-        // BaniDB has been known to return either shabadIds [] or shabads: [{shabadId: ...}]
-        val shabadIds = root.optJSONArray("shabadIds")
-        if (shabadIds != null) {
-            for (i in 0 until shabadIds.length()) ids.add(shabadIds.getLong(i))
+        root.optJSONArray("shabadIds")?.let {
+            for (i in 0 until it.length()) ids.add(it.getLong(i))
         }
-        val shabads = root.optJSONArray("shabads")
-        if (shabads != null) {
-            for (i in 0 until shabads.length()) {
-                val obj = shabads.getJSONObject(i)
-                val id = obj.optLong("shabadId", 0L)
-                if (id > 0L) ids.add(id)
+        root.optJSONArray("shabads")?.let {
+            for (i in 0 until it.length()) {
+                val id = it.getJSONObject(i).optLong("shabadId", 0)
+                if (id > 0) ids.add(id)
             }
         }
-
         val dateLabel = root.optJSONObject("date")
-            ?.optJSONObject("gregorian")
-            ?.optString("date")
+            ?.optJSONObject("gregorian")?.optString("date")
             ?.let { formatDate(it) }
             ?: formatToday()
         return ids.distinct() to dateLabel
@@ -134,39 +112,38 @@ object HukamnamaRepo {
         val info = root.optJSONObject("shabadInfo") ?: JSONObject()
         val angRaw = info.optInt("pageNo", 0)
         val ang = if (angRaw > 0) "Ang $angRaw" else ""
-        val raag = info.optJSONObject("raag")?.optString("english")
-            ?: info.optJSONObject("raag")?.optString("raagEnglish", "")
-            ?: ""
-        val writer = info.optJSONObject("writer")?.optString("english", "") ?: ""
+        val raag = info.optJSONObject("raag")?.optString("english", "").orEmpty()
+        val writer = info.optJSONObject("writer")?.optString("english", "").orEmpty()
 
         val versesArr = root.optJSONArray("verses") ?: JSONArray()
         val verses = mutableListOf<HukamnamaVerse>()
         for (i in 0 until versesArr.length()) {
             val v = versesArr.getJSONObject(i)
-            val verseObj = v.optJSONObject("verse") ?: v
-            val gurmukhi = verseObj.optString("gurmukhi", "")
-                .ifBlank { verseObj.optString("unicode", "") }
+            val verse = v.optJSONObject("verse") ?: v
+            // Prefer Unicode Gurmukhi over the AnmolLipi ASCII "gurmukhi" field.
+            val gurmukhi = firstNonBlank(
+                verse.optString("unicode", ""),
+                v.optString("unicode", ""),
+                verse.optJSONObject("gurmukhi")?.optString("unicode", ""),
+                verse.optString("gurmukhi", "")
+            )
             if (gurmukhi.isBlank()) continue
 
-            val translit = v.optJSONObject("transliteration")?.optString("english", "")
-                ?: verseObj.optJSONObject("transliteration")?.optString("english", "")
-                ?: ""
-
-            val translation = v.optJSONObject("translation")
-                ?: verseObj.optJSONObject("translation")
-
-            val englishMeaning = translation?.optJSONObject("en")?.optString("bdb", "")
-                ?: translation?.optJSONObject("english")?.optString("ssk", "")
-                ?: ""
-
-            val punjabiMeaning = translation?.optJSONObject("pu")
-                ?.optJSONObject("bdb")?.optString("unicode", "")
-                ?: ""
+            val translation = v.optJSONObject("translation") ?: verse.optJSONObject("translation")
+            val englishMeaning = firstNonBlank(
+                translation?.optJSONObject("en")?.optString("bdb", ""),
+                translation?.optJSONObject("english")?.optString("ssk", ""),
+                translation?.optJSONObject("english")?.optString("bdb", "")
+            )
+            val punjabiMeaning = firstNonBlank(
+                translation?.optJSONObject("pu")?.optJSONObject("bdb")?.optString("unicode", ""),
+                translation?.optJSONObject("pu")?.optJSONObject("ss")?.optString("unicode", ""),
+                translation?.optJSONObject("punjabi")?.optString("bdb", "")
+            )
 
             verses.add(
                 HukamnamaVerse(
                     gurmukhi = gurmukhi,
-                    transliteration = translit,
                     englishMeaning = englishMeaning,
                     punjabiMeaning = punjabiMeaning
                 )
@@ -182,17 +159,28 @@ object HukamnamaRepo {
         )
     }
 
+    private fun firstNonBlank(vararg values: String?): String =
+        values.firstOrNull { !it.isNullOrBlank() }?.trim().orEmpty()
+
     private fun formatDate(raw: String): String {
         if (raw.isBlank()) return formatToday()
         return try {
             val ins = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
             val out = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.ENGLISH)
             out.format(ins.parse(raw) ?: Calendar.getInstance().time)
-        } catch (_: Exception) {
-            raw
-        }
+        } catch (_: Exception) { raw }
     }
 
     private fun formatToday(): String =
         SimpleDateFormat("EEEE, d MMMM yyyy", Locale.ENGLISH).format(Calendar.getInstance().time)
+
+    private fun httpGet(url: String): String {
+        val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+            connectTimeout = 8_000
+            readTimeout = 15_000
+            setRequestProperty("Accept", "application/json")
+            setRequestProperty("User-Agent", "GurbaniDaily/4.0")
+        }
+        return conn.inputStream.bufferedReader().use { it.readText() }
+    }
 }

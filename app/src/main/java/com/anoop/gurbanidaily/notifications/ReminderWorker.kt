@@ -12,7 +12,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.anoop.gurbanidaily.MainActivity
 import com.anoop.gurbanidaily.R
-import com.anoop.gurbanidaily.data.ShabadPicker
+import com.anoop.gurbanidaily.data.DailyQuote
 
 class ReminderWorker(
     context: Context,
@@ -26,9 +26,17 @@ class ReminderWorker(
         ) {
             return Result.success()
         }
-        val shabad = ShabadPicker.shabadForToday()
+
         val slotLabel = inputData.getString(ReminderScheduler.KEY_SLOT_LABEL)
             ?: ctx.getString(R.string.reminder_title)
+
+        // Pull today's shabad from BaniDB (cached if already fetched today)
+        val shabad = DailyQuote.getForToday(ctx).getOrNull()
+            ?: DailyQuote.readCachedShabad(ctx)
+            ?: return Result.retry()
+
+        val english = shabad.allEnglish.trim().ifBlank { "Today's shabad is ready." }
+        val source = shabad.sourceLabel
 
         val openApp = PendingIntent.getActivity(
             ctx, 0,
@@ -39,10 +47,10 @@ class ReminderWorker(
         val notif = NotificationCompat.Builder(ctx, ReminderScheduler.CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_splash_logo)
             .setContentTitle(slotLabel)
-            .setContentText(shabad.meaning.take(120))
+            .setContentText(english.take(120))
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText("${shabad.gurmukhi}\n\n${shabad.meaning}\n\n— ${shabad.source}")
+                    .bigText("$english\n\n— $source")
             )
             .setContentIntent(openApp)
             .setAutoCancel(true)

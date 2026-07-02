@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import com.anoop.gurbanidaily.data.UserPrefs
 import com.anoop.gurbanidaily.notifications.ReminderScheduler
+import com.anoop.gurbanidaily.widget.WidgetRefreshScheduler
 
 class GurbaniApp : Application() {
 
@@ -13,6 +14,8 @@ class GurbaniApp : Application() {
     override fun onCreate() {
         super.onCreate()
         createReminderChannel()
+        WidgetRefreshScheduler.scheduleDaily(this)
+        WidgetRefreshScheduler.scheduleNow(this)
     }
 
     private fun createReminderChannel() {

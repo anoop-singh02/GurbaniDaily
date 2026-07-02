@@ -14,11 +14,11 @@ object Backup {
         withContext(Dispatchers.IO) {
             runCatching {
                 val obj = JSONObject().apply {
-                    put("version", 1)
+                    put("version", 2)
                     put("favorites", JSONArray(prefs.favorites.first().toList()))
                     put("history", JSONArray(prefs.history.first()))
                     val journal = JSONObject()
-                    prefs.journal.first().forEach { (k, v) -> journal.put(k, v) }
+                    prefs.journal.first().forEach { (k, v) -> journal.put(k.toString(), v) }
                     put("journal", journal)
                 }
                 context.contentResolver.openOutputStream(uri)?.use {
@@ -34,16 +34,21 @@ object Backup {
                     it.bufferedReader().readText()
                 } ?: error("Couldn't open input stream")
                 val obj = JSONObject(raw)
-                val favs = mutableSetOf<String>()
+                val favs = mutableSetOf<Long>()
                 obj.optJSONArray("favorites")?.let {
-                    for (i in 0 until it.length()) favs.add(it.optString(i, ""))
+                    for (i in 0 until it.length()) {
+                        val v = it.optLong(i, -1L)
+                        if (v > 0) favs.add(v)
+                    }
                 }
-                favs.removeAll { it.isBlank() }
                 prefs.replaceFavorites(favs)
 
-                val journalMap = mutableMapOf<String, String>()
+                val journalMap = mutableMapOf<Long, String>()
                 obj.optJSONObject("journal")?.let { j ->
-                    j.keys().forEach { k -> journalMap[k] = j.optString(k, "") }
+                    j.keys().forEach { k ->
+                        val id = k.toLongOrNull() ?: return@forEach
+                        journalMap[id] = j.optString(k, "")
+                    }
                 }
                 prefs.replaceJournal(journalMap)
 

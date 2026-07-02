@@ -7,9 +7,6 @@ sealed class Dest(val route: String) {
     data object Search : Dest("search")
     data object Settings : Dest("settings")
     data object Raags : Dest("raags")
-    data object Category : Dest("category/{id}") {
-        fun build(id: String) = "category/$id"
-    }
     data object Reader : Dest("reader/{id}") {
         fun build(id: String) = "reader/$id"
     }

@@ -11,7 +11,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.anoop.gurbanidaily.ui.screens.AngBrowseScreen
-import com.anoop.gurbanidaily.ui.screens.CategoryScreen
 import com.anoop.gurbanidaily.ui.screens.FavoritesScreen
 import com.anoop.gurbanidaily.ui.screens.HistoryScreen
 import com.anoop.gurbanidaily.ui.screens.MainScaffold
@@ -37,7 +36,6 @@ fun AppNavigation() {
                 onOpenHistory = { nav.navigate(Dest.History.route) },
                 onOpenSettings = { nav.navigate(Dest.Settings.route) },
                 onOpenSearch = { nav.navigate(Dest.Search.route) },
-                onOpenCategory = { id -> nav.navigate(Dest.Category.build(id)) },
                 onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) },
                 onOpenRaags = { nav.navigate(Dest.Raags.route) }
             )
@@ -73,17 +71,6 @@ fun AppNavigation() {
                         )
                     )
                 }
-            )
-        }
-        composable(
-            route = Dest.Category.route,
-            arguments = listOf(navArgument("id") { type = NavType.StringType })
-        ) { backStack ->
-            val id = backStack.arguments?.getString("id") ?: return@composable
-            CategoryScreen(
-                categoryId = id,
-                onBack = { nav.popBackStack() },
-                onOpenShabad = { sid -> nav.navigate(Dest.Reader.build(sid)) }
             )
         }
         composable(

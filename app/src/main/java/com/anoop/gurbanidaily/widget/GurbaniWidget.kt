@@ -9,7 +9,7 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.anoop.gurbanidaily.MainActivity
 import com.anoop.gurbanidaily.R
-import com.anoop.gurbanidaily.data.ShabadPicker
+import com.anoop.gurbanidaily.data.DailyQuote
 
 class GurbaniWidget : AppWidgetProvider() {
 
@@ -18,31 +18,35 @@ class GurbaniWidget : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
-        for (id in appWidgetIds) {
-            updateWidget(context, appWidgetManager, id)
-        }
+        for (id in appWidgetIds) render(context, appWidgetManager, id)
+        // Fire a background refresh — WorkManager will run DailyQuoteWorker
+        WidgetRefreshScheduler.scheduleNow(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (intent.action == ACTION_REFRESH) {
-            val mgr = AppWidgetManager.getInstance(context)
-            val ids = mgr.getAppWidgetIds(ComponentName(context, GurbaniWidget::class.java))
-            for (id in ids) updateWidget(context, mgr, id, shuffle = true)
+        when (intent.action) {
+            ACTION_REFRESH, ACTION_RENDER -> {
+                val mgr = AppWidgetManager.getInstance(context)
+                val ids = mgr.getAppWidgetIds(ComponentName(context, GurbaniWidget::class.java))
+                for (id in ids) render(context, mgr, id)
+                if (intent.action == ACTION_REFRESH) {
+                    WidgetRefreshScheduler.forceRefresh(context)
+                }
+            }
         }
     }
 
-    private fun updateWidget(
-        context: Context,
-        manager: AppWidgetManager,
-        widgetId: Int,
-        shuffle: Boolean = false
-    ) {
-        val shabad = if (shuffle) ShabadPicker.randomShabad() else ShabadPicker.shabadForToday()
+    private fun render(context: Context, manager: AppWidgetManager, widgetId: Int) {
+        val shabad = DailyQuote.readCachedShabad(context)
+        val english = shabad?.allEnglish?.trim().orEmpty().ifBlank {
+            "Tap ↻ to load today's shabad from Sri Guru Granth Sahib Ji."
+        }
+        val source = shabad?.sourceLabel.orEmpty().ifBlank { "Daily Gurbani" }
+
         val views = RemoteViews(context.packageName, R.layout.widget_gurbani)
-        views.setTextViewText(R.id.widget_gurmukhi, shabad.gurmukhi)
-        views.setTextViewText(R.id.widget_meaning, shabad.meaning)
-        views.setTextViewText(R.id.widget_source, shabad.source)
+        views.setTextViewText(R.id.widget_english, english)
+        views.setTextViewText(R.id.widget_source, source)
 
         val openApp = PendingIntent.getActivity(
             context, 0,
@@ -63,5 +67,6 @@ class GurbaniWidget : AppWidgetProvider() {
 
     companion object {
         const val ACTION_REFRESH = "com.anoop.gurbanidaily.WIDGET_REFRESH"
+        const val ACTION_RENDER = "com.anoop.gurbanidaily.WIDGET_RENDER"
     }
 }

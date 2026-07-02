@@ -32,9 +32,8 @@ class UserPrefs(private val context: Context) {
     private val keyDark = booleanPreferencesKey("dark_mode")
     private val keyDynamic = booleanPreferencesKey("dynamic_color")
     private val keyFontScale = floatPreferencesKey("font_scale")
-    private val keyFavorites = stringSetPreferencesKey("favorites")
-    private val keyHistoryOrdered = stringSetPreferencesKey("history_ordered")
-    private val keyOnboarded = booleanPreferencesKey("onboarded")
+    private val keyFavorites = stringSetPreferencesKey("favorites_ids")
+    private val keyHistoryOrdered = stringSetPreferencesKey("history_ordered_ids")
     private val keyStreak = intPreferencesKey("streak_days")
     private val keyLastOpenedDate = stringPreferencesKey("last_opened_date")
     private val keyJournal = stringPreferencesKey("journal_json")
@@ -45,20 +44,23 @@ class UserPrefs(private val context: Context) {
     private fun slotMinuteKey(slot: ReminderSlot) = intPreferencesKey("reminder_${slot.key}_m")
 
     val darkMode: Flow<Boolean> = context.dataStore.data.map { it[keyDark] ?: false }
-    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[keyDynamic] ?: true }
+    val dynamicColor: Flow<Boolean> = context.dataStore.data.map { it[keyDynamic] ?: false }
     val fontScale: Flow<Float> = context.dataStore.data.map { it[keyFontScale] ?: 1.0f }
-    val favorites: Flow<Set<String>> = context.dataStore.data.map { it[keyFavorites] ?: emptySet() }
-    val history: Flow<List<String>> = context.dataStore.data.map { prefs -> prefs.historyList() }
-    val onboarded: Flow<Boolean> = context.dataStore.data.map { it[keyOnboarded] ?: false }
+    val favorites: Flow<Set<Long>> = context.dataStore.data.map {
+        (it[keyFavorites] ?: emptySet()).mapNotNull { s -> s.toLongOrNull() }.toSet()
+    }
+    val history: Flow<List<Long>> = context.dataStore.data.map { prefs -> prefs.historyList() }
     val streak: Flow<Int> = context.dataStore.data.map { it[keyStreak] ?: 0 }
-    val journal: Flow<Map<String, String>> = context.dataStore.data.map { prefs ->
+    val lastUpdateCheck: Flow<Long> = context.dataStore.data.map { it[keyLastUpdateCheck] ?: 0L }
+    val journal: Flow<Map<Long, String>> = context.dataStore.data.map { prefs ->
         val raw = prefs[keyJournal] ?: return@map emptyMap()
         runCatching {
             val obj = JSONObject(raw)
-            obj.keys().asSequence().associateWith { k -> obj.optString(k, "") }
+            obj.keys().asSequence()
+                .mapNotNull { k -> k.toLongOrNull()?.let { it to obj.optString(k, "") } }
+                .toMap()
         }.getOrDefault(emptyMap())
     }
-    val lastUpdateCheck: Flow<Long> = context.dataStore.data.map { it[keyLastUpdateCheck] ?: 0L }
 
     fun reminder(slot: ReminderSlot): Flow<ReminderState> = context.dataStore.data.map { prefs ->
         ReminderState(
@@ -71,28 +73,28 @@ class UserPrefs(private val context: Context) {
     suspend fun setDarkMode(v: Boolean) = context.dataStore.edit { it[keyDark] = v }
     suspend fun setDynamicColor(v: Boolean) = context.dataStore.edit { it[keyDynamic] = v }
     suspend fun setFontScale(v: Float) = context.dataStore.edit { it[keyFontScale] = v }
-    suspend fun setOnboarded(v: Boolean) = context.dataStore.edit { it[keyOnboarded] = v }
 
-    suspend fun setReminderEnabled(slot: ReminderSlot, on: Boolean) = context.dataStore.edit {
-        it[slotEnabledKey(slot)] = on
-    }
+    suspend fun setReminderEnabled(slot: ReminderSlot, on: Boolean) =
+        context.dataStore.edit { it[slotEnabledKey(slot)] = on }
     suspend fun setReminderTime(slot: ReminderSlot, hour: Int, minute: Int) =
         context.dataStore.edit {
             it[slotHourKey(slot)] = hour
             it[slotMinuteKey(slot)] = minute
         }
 
-    suspend fun toggleFavorite(id: String) = context.dataStore.edit { prefs ->
+    suspend fun toggleFavorite(id: Long) = context.dataStore.edit { prefs ->
         val current = prefs[keyFavorites] ?: emptySet()
-        prefs[keyFavorites] = if (id in current) current - id else current + id
+        val idStr = id.toString()
+        prefs[keyFavorites] = if (idStr in current) current - idStr else current + idStr
     }
 
-    suspend fun pushHistory(id: String) = context.dataStore.edit { prefs ->
+    suspend fun pushHistory(id: Long) = context.dataStore.edit { prefs ->
         val ordered = prefs.historyList().toMutableList()
         ordered.remove(id)
         ordered.add(0, id)
         while (ordered.size > MAX_HISTORY) ordered.removeAt(ordered.size - 1)
-        prefs[keyHistoryOrdered] = ordered.mapIndexed { i, v -> "$i|$v" }.toSet()
+        prefs[keyHistoryOrdered] =
+            ordered.mapIndexed { i, v -> "$i|$v" }.toSet()
     }
 
     suspend fun clearHistory() = context.dataStore.edit { it[keyHistoryOrdered] = emptySet() }
@@ -110,23 +112,35 @@ class UserPrefs(private val context: Context) {
         prefs[keyLastOpenedDate] = today
     }
 
-    suspend fun setJournalEntry(shabadId: String, text: String) = context.dataStore.edit { prefs ->
+    suspend fun setJournalEntry(shabadId: Long, text: String) = context.dataStore.edit { prefs ->
         val raw = prefs[keyJournal] ?: "{}"
         val obj = runCatching { JSONObject(raw) }.getOrDefault(JSONObject())
-        if (text.isBlank()) obj.remove(shabadId) else obj.put(shabadId, text)
+        if (text.isBlank()) obj.remove(shabadId.toString()) else obj.put(shabadId.toString(), text)
         prefs[keyJournal] = obj.toString()
     }
 
     suspend fun setLastUpdateCheck(ms: Long) =
         context.dataStore.edit { it[keyLastUpdateCheck] = ms }
 
-    suspend fun replaceFavorites(ids: Set<String>) =
-        context.dataStore.edit { it[keyFavorites] = ids }
+    suspend fun replaceFavorites(ids: Set<Long>) =
+        context.dataStore.edit { it[keyFavorites] = ids.map { it.toString() }.toSet() }
 
-    suspend fun replaceJournal(map: Map<String, String>) = context.dataStore.edit { prefs ->
+    suspend fun replaceJournal(map: Map<Long, String>) = context.dataStore.edit { prefs ->
         val obj = JSONObject()
-        map.forEach { (k, v) -> obj.put(k, v) }
+        map.forEach { (k, v) -> obj.put(k.toString(), v) }
         prefs[keyJournal] = obj.toString()
+    }
+
+    private fun Preferences.historyList(): List<Long> {
+        val raw = this[keyHistoryOrdered] ?: emptySet()
+        return raw.mapNotNull { entry ->
+            val parts = entry.split("|", limit = 2)
+            if (parts.size == 2) {
+                val idx = parts[0].toIntOrNull() ?: return@mapNotNull null
+                val id = parts[1].toLongOrNull() ?: return@mapNotNull null
+                idx to id
+            } else null
+        }.sortedBy { it.first }.map { it.second }
     }
 
     private fun todayKey(): String =
@@ -135,14 +149,6 @@ class UserPrefs(private val context: Context) {
     private fun yesterdayKey(): String {
         val c = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
         return SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(c.time)
-    }
-
-    private fun Preferences.historyList(): List<String> {
-        val raw = this[keyHistoryOrdered] ?: emptySet()
-        return raw.mapNotNull { entry ->
-            val parts = entry.split("|", limit = 2)
-            if (parts.size == 2) parts[0].toIntOrNull()?.let { i -> i to parts[1] } else null
-        }.sortedBy { it.first }.map { it.second }
     }
 
     companion object {
