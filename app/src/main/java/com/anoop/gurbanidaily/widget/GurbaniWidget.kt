@@ -9,7 +9,11 @@ import android.content.Intent
 import android.widget.RemoteViews
 import com.anoop.gurbanidaily.MainActivity
 import com.anoop.gurbanidaily.R
+import com.anoop.gurbanidaily.data.DailyInsightBuilder
 import com.anoop.gurbanidaily.data.DailyQuote
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class GurbaniWidget : AppWidgetProvider() {
 
@@ -39,13 +43,16 @@ class GurbaniWidget : AppWidgetProvider() {
 
     private fun render(context: Context, manager: AppWidgetManager, widgetId: Int) {
         val shabad = DailyQuote.readCachedShabad(context)
-        val english = shabad?.allEnglish?.trim().orEmpty().ifBlank {
-            "Tap ↻ to load today's shabad from Sri Guru Granth Sahib Ji."
+        val insight = shabad?.let { DailyInsightBuilder.from(it) }
+        val reflection = insight?.reflection.orEmpty().ifBlank {
+            "Tap refresh to load today's Gurbani reflection."
         }
         val source = shabad?.sourceLabel.orEmpty().ifBlank { "Daily Gurbani" }
+        val date = SimpleDateFormat("EEE, MMM d", Locale.ENGLISH).format(Date())
 
         val views = RemoteViews(context.packageName, R.layout.widget_gurbani)
-        views.setTextViewText(R.id.widget_english, english)
+        views.setTextViewText(R.id.widget_date, date)
+        views.setTextViewText(R.id.widget_reflection, reflection)
         views.setTextViewText(R.id.widget_source, source)
 
         val openApp = PendingIntent.getActivity(

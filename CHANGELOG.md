@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.24 · build-24 — 2026-07-02
+- Redesign the home-screen widget into a focused daily reflection card with a short thought, source, tap-to-open, and refresh action.
+- Improve widget sizing, touch targets, and preview layout alignment with Android widget guidance.
+
 ## v4.23 · build-23 — 2026-07-02
 - Fully redesign Settings with clearer grouped sections, icon-led rows, and cleaner status states.
 - Keep all existing settings actions for appearance, reminders, Punjabi month notifications, updates, backup, and about.

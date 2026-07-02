@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:padding="14dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,50 +14,79 @@
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/widget_title"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Daily Gurbani"
-            android:textColor="#B85C16"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.08" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Today's Reflection"
+                android:textColor="#B85C16"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/widget_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:textColor="#7A6F60"
+                android:textSize="10sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Daily reflection"
+                tools:text="Thu, Jul 2" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/widget_refresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_icon_button"
+            android:gravity="center"
             android:text="↻"
             android:textColor="#B85C16"
-            android:textSize="20sp"
-            android:paddingStart="8dp"
-            android:paddingEnd="4dp" />
+            android:textSize="20sp" />
     </LinearLayout>
 
     <TextView
-        android:id="@+id/widget_english"
+        android:id="@+id/widget_reflection"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:layout_weight="1"
-        android:layout_marginTop="10dp"
+        android:background="@drawable/widget_quote_panel"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="3sp"
+        android:maxLines="5"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp"
         android:textColor="#2C2C2A"
         android:textSize="14sp"
-        android:lineSpacingExtra="3sp"
-        android:ellipsize="end"
-        tools:text="Whatever pleases You is the only good deed." />
+        android:text="Carry this Gurbani slowly today. Let it bring your mind back to the Guru, then meet the day with calm, honest action."
+        tools:text="Keep your day close to truth. Let one decision be guided by honesty instead of pressure." />
 
     <TextView
         android:id="@+id/widget_source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="8dp"
+        android:ellipsize="end"
+        android:maxLines="2"
         android:textColor="#1A3A5C"
         android:textSize="11sp"
         android:textStyle="bold"
-        android:maxLines="2"
-        android:ellipsize="end"
+        android:text="Daily Gurbani"
         tools:text="Guru Nanak Dev Ji · Ang 3" />
 
 </LinearLayout>
