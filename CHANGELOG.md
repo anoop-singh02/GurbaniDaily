@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.21 · build-21 — 2026-07-02
+- Fix the current Punjabi month fallback for early January.
+- Clean up Settings card width, narrow-screen navigation labels, and typography spacing.
+
 ## v4.20 · build-20 — 2026-07-02
 - Remove Browse by Raag from Explore.
 - Delete the now-unreachable Raag browsing screens and API wrappers.

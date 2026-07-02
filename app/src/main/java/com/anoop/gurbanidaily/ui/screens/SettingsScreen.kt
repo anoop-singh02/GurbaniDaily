@@ -417,7 +417,10 @@ fun SettingsScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
 
 @Composable
 private fun SectionCard(title: String, content: @Composable () -> Unit) {
-    Card(shape = RoundedCornerShape(20.dp)) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp)
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
                 title,

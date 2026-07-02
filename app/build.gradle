@@ -3,8 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-def resolvedVersionCode = (System.getenv("VERSION_CODE") ?: "14").toInteger()
-def resolvedVersionName = System.getenv("VERSION_NAME") ?: "4.14"
+def resolvedVersionCode = (System.getenv("VERSION_CODE") ?: "21").toInteger()
+def resolvedVersionName = System.getenv("VERSION_NAME") ?: "4.21"
 
 android {
     namespace 'com.anoop.gurbanidaily'

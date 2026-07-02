@@ -61,6 +61,6 @@ object NanakshahiCalendar {
         // (Chet = 14 March is the "start" of the Nanakshahi year).
         val chronological = months.sortedBy { it.startMonth * 100 + it.startDay }
         return chronological.lastOrNull { (it.startMonth * 100 + it.startDay) <= today }
-            ?: months.last() // e.g. Feb 1 → Magh (started Jan 13)
+            ?: chronological.last() // e.g. Jan 1 -> Poh (started Dec 14)
     }
 }

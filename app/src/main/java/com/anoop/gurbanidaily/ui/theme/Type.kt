@@ -17,14 +17,14 @@ val GurbaniTypography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 40.sp,
         lineHeight = 48.sp,
-        letterSpacing = (-0.5).sp
+        letterSpacing = 0.sp
     ),
     displayMedium = TextStyle(
         fontFamily = DisplayFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 32.sp,
         lineHeight = 40.sp,
-        letterSpacing = (-0.3).sp
+        letterSpacing = 0.sp
     ),
     displaySmall = TextStyle(
         fontFamily = DisplayFamily,
@@ -49,7 +49,7 @@ val GurbaniTypography = Typography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.1.sp
+        letterSpacing = 0.sp
     ),
     titleMedium = TextStyle(
         fontFamily = BodyFamily,
@@ -79,21 +79,21 @@ val GurbaniTypography = Typography(
         fontFamily = BodyFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 13.sp,
-        letterSpacing = 0.6.sp,
+        letterSpacing = 0.sp,
         lineHeight = 18.sp
     ),
     labelMedium = TextStyle(
         fontFamily = BodyFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
-        letterSpacing = 1.2.sp,
+        letterSpacing = 0.sp,
         lineHeight = 16.sp
     ),
     labelSmall = TextStyle(
         fontFamily = BodyFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
-        letterSpacing = 1.4.sp,
+        letterSpacing = 0.sp,
         lineHeight = 14.sp
     )
 )

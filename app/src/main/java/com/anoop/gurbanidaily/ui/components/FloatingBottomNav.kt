@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -82,7 +83,7 @@ private fun NavPillItem(
         else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "nav-fg"
     )
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .padding(4.dp)
             .clip(CircleShape)
@@ -91,6 +92,7 @@ private fun NavPillItem(
             .padding(horizontal = 14.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
+        val showLabel = selected && maxWidth >= 96.dp
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = icon,
@@ -98,7 +100,7 @@ private fun NavPillItem(
                 tint = fg,
                 modifier = Modifier.size(20.dp)
             )
-            if (selected) {
+            if (showLabel) {
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = label,
