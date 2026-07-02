@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.23 · build-23 — 2026-07-02
+- Fully redesign Settings with clearer grouped sections, icon-led rows, and cleaner status states.
+- Keep all existing settings actions for appearance, reminders, Punjabi month notifications, updates, backup, and about.
+
 ## v4.22 · build-22 — 2026-07-02
 - Redesign Today's Quote into a short daily reflection: one Gurbani line, a brief meaning, and a practical thought for the day.
 - Keep the quote online through BaniDB while making the first screen easier to understand at a glance.
