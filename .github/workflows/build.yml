@@ -63,7 +63,7 @@ jobs:
       - name: Publish release with APK + changelog
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.notes.outputs.version_name }}
+          tag_name: build-${{ steps.notes.outputs.version_code }}
           name: v${{ steps.notes.outputs.version_name }} · build-${{ steps.notes.outputs.version_code }}
           body_path: .latest_notes.md
           files: GurbaniDaily.apk
