@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.anoop.gurbanidaily.GurbaniApp
 import com.anoop.gurbanidaily.data.DailyQuote
+import com.anoop.gurbanidaily.data.NanakshahiCalendar
 import com.anoop.gurbanidaily.data.OnlineShabad
 import com.anoop.gurbanidaily.data.PreviewCache
 import com.anoop.gurbanidaily.data.SavedShabadPreview
@@ -61,7 +62,9 @@ fun QuoteScreen(contentPadding: PaddingValues) {
     val fontScale by prefs.fontScale.collectAsState(initial = 1.0f)
     val streak by prefs.streak.collectAsState(initial = 0)
     val dateLabel = remember {
-        SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH).format(Date())
+        val greg = SimpleDateFormat("EEEE, d MMMM", Locale.ENGLISH).format(Date())
+        val nan = NanakshahiCalendar.currentMonth()
+        "$greg  ·  ${nan.gurmukhi} ${nan.english}"
     }
 
     var shabad by remember { mutableStateOf<OnlineShabad?>(null) }

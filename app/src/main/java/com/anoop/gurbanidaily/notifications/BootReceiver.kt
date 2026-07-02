@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.anoop.gurbanidaily.data.ReminderSlot
 import com.anoop.gurbanidaily.data.UserPrefs
+import com.anoop.gurbanidaily.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -15,18 +16,18 @@ class BootReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val prefs = UserPrefs(context.applicationContext)
+                val app = context.applicationContext
+                val prefs = UserPrefs(app)
                 ReminderSlot.entries.forEach { slot ->
                     val state = prefs.reminder(slot).first()
                     if (state.enabled) {
-                        ReminderScheduler.schedule(
-                            context.applicationContext,
-                            slot,
-                            state.hour,
-                            state.minute
-                        )
+                        ReminderScheduler.schedule(app, slot, state.hour, state.minute)
                     }
                 }
+                // Reschedule the daily widget worker + sangrand checker so they
+                // survive reboots and package replaces.
+                WidgetRefreshScheduler.scheduleDaily(app)
+                SangrandScheduler.scheduleDaily(app)
             } finally {
                 pending.finish()
             }
