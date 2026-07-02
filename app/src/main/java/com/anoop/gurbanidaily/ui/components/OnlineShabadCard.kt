@@ -51,7 +51,7 @@ fun OnlineShabadCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (shabad.raagEnglish.isNotBlank()) PillChip("Raag ${shabad.raagEnglish}")
+                if (shabad.raagEnglish.isNotBlank()) PillChip(com.anoop.gurbanidaily.data.formatRaag(shabad.raagEnglish))
                 if (shabad.ang > 0) PillChip("Ang ${shabad.ang}")
             }
             if (shabad.writerEnglish.isNotBlank()) {

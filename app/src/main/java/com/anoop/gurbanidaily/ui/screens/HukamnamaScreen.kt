@@ -203,7 +203,7 @@ private fun HukamnamaCard(
             if (hukamnama.ang.isNotEmpty() || hukamnama.raag.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (hukamnama.raag.isNotEmpty()) PillChip("Raag ${hukamnama.raag}")
+                    if (hukamnama.raag.isNotEmpty()) PillChip(com.anoop.gurbanidaily.data.formatRaag(hukamnama.raag))
                     if (hukamnama.ang.isNotEmpty()) PillChip(hukamnama.ang)
                 }
             }

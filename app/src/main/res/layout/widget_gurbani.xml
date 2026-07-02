@@ -45,7 +45,6 @@
         android:textColor="#2C2C2A"
         android:textSize="14sp"
         android:lineSpacingExtra="3sp"
-        android:maxLines="5"
         android:ellipsize="end"
         tools:text="Whatever pleases You is the only good deed." />
 
@@ -53,11 +52,11 @@
         android:id="@+id/widget_source"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:textColor="#1A3A5C"
         android:textSize="11sp"
         android:textStyle="bold"
-        android:maxLines="1"
+        android:maxLines="2"
         android:ellipsize="end"
         tools:text="Guru Nanak Dev Ji · Ang 3" />
 

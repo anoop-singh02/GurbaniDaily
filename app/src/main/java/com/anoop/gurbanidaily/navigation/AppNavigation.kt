@@ -67,7 +67,7 @@ fun AppNavigation() {
                         Dest.AngBrowse.build(
                             start = raag.angStart.coerceAtLeast(1),
                             end = raag.angEnd,
-                            raag = "Raag ${raag.english}"
+                            raag = com.anoop.gurbanidaily.data.formatRaag(raag.english)
                         )
                     )
                 }

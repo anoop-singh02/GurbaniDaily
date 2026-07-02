@@ -53,7 +53,7 @@ object OnlineSearch {
             val ang = v.optInt("pageNo", 0)
             val parts = listOfNotNull(
                 writer.takeIf { it.isNotBlank() },
-                raag.takeIf { it.isNotBlank() }?.let { "Raag $it" },
+                raag.takeIf { it.isNotBlank() }?.let { formatRaag(it) },
                 if (ang > 0) "Ang $ang" else null
             )
             if (gurmukhi.isNotBlank()) {

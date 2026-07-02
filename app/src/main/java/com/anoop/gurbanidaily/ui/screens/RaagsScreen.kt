@@ -114,7 +114,7 @@ private fun RaagRow(raag: Raag, onClick: () -> Unit) {
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             Text(
-                "Raag ${raag.english.ifBlank { "#${raag.id}" }}",
+                com.anoop.gurbanidaily.data.formatRaag(raag.english.ifBlank { "#${raag.id}" }),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary

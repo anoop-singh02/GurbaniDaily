@@ -27,9 +27,16 @@ data class OnlineShabad(
     val sourceLabel: String
         get() = listOfNotNull(
             writerEnglish.takeIf { it.isNotBlank() },
-            raagEnglish.takeIf { it.isNotBlank() }?.let { "Raag $it" },
+            raagEnglish.takeIf { it.isNotBlank() }?.let { formatRaag(it) },
             if (ang > 0) "Ang $ang" else null
         ).joinToString(" · ")
+}
+
+/** BaniDB sometimes returns raag names already prefixed with "Raag " —
+ * strip it so we don't render "Raag Raag Sorath". */
+fun formatRaag(raw: String): String {
+    val cleaned = raw.trim().removePrefix("Raag ").removePrefix("raag ").trim()
+    return "Raag $cleaned"
 }
 
 object ShabadApi {
