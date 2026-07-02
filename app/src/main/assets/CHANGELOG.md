@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.20 · build-20 — 2026-07-02
+- Remove Browse by Raag from Explore.
+- Delete the now-unreachable Raag browsing screens and API wrappers.
+
 ## v4.19 · build-19 — 2026-07-02
 - Remove Random Shabad from Explore.
 - Clean up the unused Explore random-loading state and imports.
@@ -55,7 +59,7 @@ Releases are tagged `build-N` so old in-app updaters can detect them. The APK's 
 - **In-app auto-updater.** Settings → Updates → Check + Download + Install. FileProvider-backed; no more Obtainium needed.
 - **Hukamnama archive** — date picker, browse any past day.
 - **Hukamnama verse-by-verse layout** — each verse rendered with Gurmukhi + transliteration + meaning + hairline separator.
-- **Browse SGGS Ji by Raag** — Library → Browse by Raag → tap raag → swipe through angs → tap any shabad to read.
+- **Browse SGGS Ji by Raag** — removed in build 20.
 - **Daily Nitnem** quick-launch chips on Library.
 - **🔥 Reading streak** chip on Today's Quote (shown once streak ≥ 2 days).
 - **Reflection journal** on every shabad (private, autosaves).

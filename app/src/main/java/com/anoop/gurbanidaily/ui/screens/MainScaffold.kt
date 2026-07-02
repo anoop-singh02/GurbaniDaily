@@ -47,8 +47,6 @@ fun MainScaffold(
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
-    onOpenShabad: (String) -> Unit,
-    onOpenRaags: () -> Unit,
     onOpenPunjabiMonths: () -> Unit
 ) {
     var currentTab by rememberSaveable { mutableStateOf(TopTab.Quote.route) }
@@ -128,7 +126,6 @@ fun MainScaffold(
                         TopTab.Library -> LibraryScreen(
                             contentPadding = padding,
                             onOpenSearch = onOpenSearch,
-                            onOpenRaags = onOpenRaags,
                             onOpenHukamnama = { currentTab = TopTab.Hukamnama.route },
                             onOpenPunjabiMonths = onOpenPunjabiMonths
                         )

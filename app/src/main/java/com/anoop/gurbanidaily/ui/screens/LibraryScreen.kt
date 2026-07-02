@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.WbSunny
@@ -39,7 +38,6 @@ import com.anoop.gurbanidaily.ui.components.DisplayHeader
 fun LibraryScreen(
     contentPadding: PaddingValues,
     onOpenSearch: () -> Unit,
-    onOpenRaags: () -> Unit,
     onOpenHukamnama: () -> Unit,
     onOpenPunjabiMonths: () -> Unit
 ) {
@@ -73,14 +71,6 @@ fun LibraryScreen(
             subtitle = "${currentMonth.gurmukhi} ${currentMonth.english} now · Sangrand dates",
             onClick = onOpenPunjabiMonths
         )
-        Spacer(Modifier.height(12.dp))
-        BigTile(
-            icon = Icons.Outlined.AutoStories,
-            title = "Browse by Raag",
-            subtitle = "31 raags of SGGS Ji",
-            onClick = onOpenRaags
-        )
-
         Spacer(Modifier.height(120.dp))
     }
 }
