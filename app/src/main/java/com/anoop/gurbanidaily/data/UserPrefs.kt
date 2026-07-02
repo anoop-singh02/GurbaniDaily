@@ -38,6 +38,7 @@ class UserPrefs(private val context: Context) {
     private val keyLastOpenedDate = stringPreferencesKey("last_opened_date")
     private val keyJournal = stringPreferencesKey("journal_json")
     private val keyLastUpdateCheck = longPreferencesKey("last_update_check_ms")
+    private val keyLastSeenChangelogBuild = intPreferencesKey("last_seen_changelog_build")
 
     private fun slotEnabledKey(slot: ReminderSlot) = booleanPreferencesKey("reminder_${slot.key}_on")
     private fun slotHourKey(slot: ReminderSlot) = intPreferencesKey("reminder_${slot.key}_h")
@@ -52,6 +53,8 @@ class UserPrefs(private val context: Context) {
     val history: Flow<List<Long>> = context.dataStore.data.map { prefs -> prefs.historyList() }
     val streak: Flow<Int> = context.dataStore.data.map { it[keyStreak] ?: 0 }
     val lastUpdateCheck: Flow<Long> = context.dataStore.data.map { it[keyLastUpdateCheck] ?: 0L }
+    val lastSeenChangelogBuild: Flow<Int> =
+        context.dataStore.data.map { it[keyLastSeenChangelogBuild] ?: 0 }
     val journal: Flow<Map<Long, String>> = context.dataStore.data.map { prefs ->
         val raw = prefs[keyJournal] ?: return@map emptyMap()
         runCatching {
@@ -121,6 +124,9 @@ class UserPrefs(private val context: Context) {
 
     suspend fun setLastUpdateCheck(ms: Long) =
         context.dataStore.edit { it[keyLastUpdateCheck] = ms }
+
+    suspend fun setLastSeenChangelogBuild(build: Int) =
+        context.dataStore.edit { it[keyLastSeenChangelogBuild] = build }
 
     suspend fun replaceFavorites(ids: Set<Long>) =
         context.dataStore.edit { it[keyFavorites] = ids.map { it.toString() }.toSet() }

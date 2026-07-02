@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.anoop.gurbanidaily.ui.screens.AngBrowseScreen
+import com.anoop.gurbanidaily.ui.screens.ChangelogScreen
 import com.anoop.gurbanidaily.ui.screens.FavoritesScreen
 import com.anoop.gurbanidaily.ui.screens.HistoryScreen
 import com.anoop.gurbanidaily.ui.screens.MainScaffold
@@ -58,7 +59,15 @@ fun AppNavigation() {
                 onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) }
             )
         }
-        composable(Dest.Settings.route) { SettingsScreen(onBack = { nav.popBackStack() }) }
+        composable(Dest.Settings.route) {
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
+                onOpenChangelog = { nav.navigate(Dest.Changelog.route) }
+            )
+        }
+        composable(Dest.Changelog.route) {
+            ChangelogScreen(onBack = { nav.popBackStack() })
+        }
         composable(Dest.Raags.route) {
             RaagsScreen(
                 onBack = { nav.popBackStack() },

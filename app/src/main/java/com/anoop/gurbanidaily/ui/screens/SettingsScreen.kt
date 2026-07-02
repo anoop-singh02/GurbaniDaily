@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
     val context = LocalContext.current
     val app = context.applicationContext as GurbaniApp
     val prefs = app.prefs
@@ -252,6 +252,11 @@ fun SettingsScreen(onBack: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    FilledTonalButton(onClick = onOpenChangelog) {
+                        Text("What's new")
+                    }
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     FilledTonalButton(
                         onClick = {

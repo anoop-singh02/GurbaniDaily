@@ -5,4 +5,6 @@
     <string name="reminder_title">Today\'s Shabad</string>
     <string name="sangrand_channel_name">Nanakshahi Sangrand</string>
     <string name="sangrand_channel_desc">Notified on the first day of each Punjabi (Nanakshahi) month.</string>
+    <string name="updates_channel_name">App Updates</string>
+    <string name="updates_channel_desc">Quiet notifications when a new build of Daily Gurbani is available.</string>
 </resources>

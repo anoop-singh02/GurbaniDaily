@@ -25,6 +25,23 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Sync CHANGELOG.md into APK assets before building
+        run: |
+          mkdir -p app/src/main/assets
+          cp CHANGELOG.md app/src/main/assets/CHANGELOG.md
+
+      - name: Extract version + latest changelog entry
+        id: notes
+        run: |
+          VERSION_NAME=$(grep 'versionName ' app/build.gradle | sed "s/.*versionName \"\(.*\)\"/\1/")
+          VERSION_CODE=$(grep 'versionCode ' app/build.gradle | sed 's/.*versionCode \([0-9]*\).*/\1/')
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          awk '/^## /{if(count++){exit}} count' CHANGELOG.md > .latest_notes.md
+          echo "" >> .latest_notes.md
+          echo "---" >> .latest_notes.md
+          echo "Debug APK from commit ${{ github.sha }} on branch \`${{ github.ref_name }}\`." >> .latest_notes.md
+
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
@@ -41,14 +58,11 @@ jobs:
           path: GurbaniDaily.apk
           if-no-files-found: error
 
-      - name: Publish release with APK
+      - name: Publish release with APK + changelog
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: GurbaniDaily build ${{ github.run_number }}
-          body: |
-            Debug APK from commit ${{ github.sha }} on branch `${{ github.ref_name }}`.
-
-            Download **GurbaniDaily.apk** below, open it on your Pixel, and tap Install.
+          name: v${{ steps.notes.outputs.version_name }} · build-${{ github.run_number }}
+          body_path: .latest_notes.md
           files: GurbaniDaily.apk
           make_latest: "true"

@@ -6,6 +6,7 @@ sealed class Dest(val route: String) {
     data object History : Dest("history")
     data object Search : Dest("search")
     data object Settings : Dest("settings")
+    data object Changelog : Dest("changelog")
     data object Raags : Dest("raags")
     data object Reader : Dest("reader/{id}") {
         fun build(id: String) = "reader/$id"
