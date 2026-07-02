@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -27,32 +26,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.anoop.gurbanidaily.data.NanakshahiCalendar
-import com.anoop.gurbanidaily.data.ShabadApi
 import com.anoop.gurbanidaily.ui.components.DisplayHeader
-import kotlinx.coroutines.launch
 
 @Composable
 fun LibraryScreen(
     contentPadding: PaddingValues,
     onOpenSearch: () -> Unit,
-    onOpenShabad: (String) -> Unit,
     onOpenRaags: () -> Unit,
     onOpenHukamnama: () -> Unit,
     onOpenPunjabiMonths: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-    var loadingRandom by remember { mutableStateOf(false) }
     val currentMonth = remember { NanakshahiCalendar.currentMonth() }
 
     Column(
@@ -70,24 +60,6 @@ fun LibraryScreen(
         SearchPrompt(onOpenSearch)
         Spacer(Modifier.height(12.dp))
 
-        BigTile(
-            icon = Icons.Outlined.Shuffle,
-            title = "Random Shabad",
-            subtitle = "Pick any shabad from the 1430 angs",
-            loading = loadingRandom,
-            onClick = {
-                if (loadingRandom) return@BigTile
-                loadingRandom = true
-                scope.launch {
-                    ShabadApi.fetchRandom().fold(
-                        onSuccess = { s -> onOpenShabad("online:${s.shabadId}") },
-                        onFailure = { /* no-op; user can retry */ }
-                    )
-                    loadingRandom = false
-                }
-            }
-        )
-        Spacer(Modifier.height(12.dp))
         BigTile(
             icon = Icons.Outlined.WbSunny,
             title = "Today's Hukamnama",
@@ -145,7 +117,6 @@ private fun BigTile(
     icon: ImageVector,
     title: String,
     subtitle: String,
-    loading: Boolean = false,
     onClick: () -> Unit
 ) {
     Card(
@@ -175,12 +146,6 @@ private fun BigTile(
                     subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            if (loading) {
-                androidx.compose.material3.CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
                 )
             }
         }

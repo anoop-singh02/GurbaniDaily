@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.19 · build-19 — 2026-07-02
+- Remove Random Shabad from Explore.
+- Clean up the unused Explore random-loading state and imports.
+
 ## v4.18 · build-18 — 2026-07-02
 - Add a Punjabi Months section to Explore.
 - Show the current Nanakshahi month and the full Sangrand month list.
@@ -43,7 +47,7 @@ Releases are tagged `build-N` so old in-app updaters can detect them. The APK's 
 - **Hukamnama daily from Sri Harmandir Sahib** — cache invalidates on date change so the tab is always current.
 - **Widget shows English only**, no Gurmukhi block. Updated daily by WorkManager.
 - **Notifications** pull today's English quote from BaniDB.
-- **Library redesigned** — three tiles (Random Shabad, Today's Hukamnama, Browse by Raag) and a search prompt.
+- **Library redesigned** — quick access tiles and a search prompt.
 - **Search** is online-only, spans the whole SGGS Ji.
 - **Fav / History** rendered from a local preview cache so no re-fetch on open.
 

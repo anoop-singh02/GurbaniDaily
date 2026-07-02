@@ -128,7 +128,6 @@ fun MainScaffold(
                         TopTab.Library -> LibraryScreen(
                             contentPadding = padding,
                             onOpenSearch = onOpenSearch,
-                            onOpenShabad = onOpenShabad,
                             onOpenRaags = onOpenRaags,
                             onOpenHukamnama = { currentTab = TopTab.Hukamnama.route },
                             onOpenPunjabiMonths = onOpenPunjabiMonths
