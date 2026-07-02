@@ -1,6 +1,10 @@
 # Daily Gurbani — What's New
 
-Every release is tagged `build-N` on GitHub Releases. Newest first.
+Older releases were tagged `build-N`; new releases use the Android `versionName` as the GitHub tag so Obtainium can compare versions cleanly. Newest first.
+
+## v4.15 · build-15 — 2026-07-02
+- Fix update detection so the APK's Android version code is generated from the GitHub Actions build number.
+- Use the same standard version string for Android `versionName` and the GitHub Release tag, so Obtainium stops offering the same already-installed update.
 
 ## v4.3 · build-14 — 2026-06-19
 - **"What's New" dialog** pops up the first time you open the app after an update, summarising exactly what changed.

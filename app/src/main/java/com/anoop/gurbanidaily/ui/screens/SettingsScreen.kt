@@ -289,7 +289,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
                 val info = updateInfo
                 if (info != null) {
                     Text(
-                        "Update available: ${info.tagName} (build ${info.buildNumber})",
+                        "Update available: ${info.displayName} (build ${info.buildNumber})",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary

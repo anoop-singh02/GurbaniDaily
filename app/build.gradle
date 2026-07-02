@@ -3,6 +3,9 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+def resolvedVersionCode = (System.getenv("VERSION_CODE") ?: "14").toInteger()
+def resolvedVersionName = System.getenv("VERSION_NAME") ?: "4.14"
+
 android {
     namespace 'com.anoop.gurbanidaily'
     compileSdk 36
@@ -11,8 +14,8 @@ android {
         applicationId "com.anoop.gurbanidaily"
         minSdk 26
         targetSdk 36
-        versionCode 11
-        versionName "4.3"
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
     }
 
     signingConfigs {

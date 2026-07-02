@@ -16,6 +16,7 @@ import java.net.URL
 
 data class UpdateInfo(
     val tagName: String,
+    val displayName: String,
     val buildNumber: Int,
     val downloadUrl: String,
     val sizeBytes: Long
@@ -31,7 +32,8 @@ object AutoUpdater {
             val raw = httpGet(LATEST_RELEASE_URL)
             val root = JSONObject(raw)
             val tag = root.optString("tag_name", "")
-            val build = tag.removePrefix("build-").toIntOrNull() ?: return@runCatching null
+            val releaseName = root.optString("name", "")
+            val build = buildNumberFrom(tag, releaseName) ?: return@runCatching null
             val assets = root.optJSONArray("assets") ?: return@runCatching null
             var downloadUrl = ""
             var size = 0L
@@ -46,7 +48,13 @@ object AutoUpdater {
             }
             if (downloadUrl.isBlank()) return@runCatching null
             if (build <= BuildConfig.VERSION_CODE) return@runCatching null
-            UpdateInfo(tag, build, downloadUrl, size)
+            UpdateInfo(
+                tagName = tag,
+                displayName = releaseName.ifBlank { tag },
+                buildNumber = build,
+                downloadUrl = downloadUrl,
+                sizeBytes = size
+            )
         }
     }
 
@@ -111,5 +119,23 @@ object AutoUpdater {
             setRequestProperty("User-Agent", "GurbaniDaily/${BuildConfig.VERSION_NAME}")
         }
         return conn.inputStream.bufferedReader().use { it.readText() }
+    }
+
+    private fun buildNumberFrom(tag: String, releaseName: String): Int? {
+        val combined = "$tag $releaseName"
+        Regex("""\bbuild[- ]?(\d+)\b""", RegexOption.IGNORE_CASE)
+            .find(combined)
+            ?.groupValues
+            ?.getOrNull(1)
+            ?.toIntOrNull()
+            ?.let { return it }
+
+        if (tag.startsWith("build-", ignoreCase = true)) {
+            return tag.substringAfter("build-").toIntOrNull()
+        }
+
+        return tag.substringAfterLast('.', "")
+            .takeIf { value -> value.isNotBlank() && value.all { it.isDigit() } }
+            ?.toIntOrNull()
     }
 }
