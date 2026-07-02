@@ -48,7 +48,8 @@ fun MainScaffold(
     onOpenSettings: () -> Unit,
     onOpenSearch: () -> Unit,
     onOpenShabad: (String) -> Unit,
-    onOpenRaags: () -> Unit
+    onOpenRaags: () -> Unit,
+    onOpenPunjabiMonths: () -> Unit
 ) {
     var currentTab by rememberSaveable { mutableStateOf(TopTab.Quote.route) }
     val tab = TopTab.fromRoute(currentTab) ?: TopTab.Quote
@@ -129,7 +130,8 @@ fun MainScaffold(
                             onOpenSearch = onOpenSearch,
                             onOpenShabad = onOpenShabad,
                             onOpenRaags = onOpenRaags,
-                            onOpenHukamnama = { currentTab = TopTab.Hukamnama.route }
+                            onOpenHukamnama = { currentTab = TopTab.Hukamnama.route },
+                            onOpenPunjabiMonths = onOpenPunjabiMonths
                         )
                     }
                 }

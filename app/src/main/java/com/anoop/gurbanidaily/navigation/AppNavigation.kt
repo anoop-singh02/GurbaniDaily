@@ -15,6 +15,7 @@ import com.anoop.gurbanidaily.ui.screens.ChangelogScreen
 import com.anoop.gurbanidaily.ui.screens.FavoritesScreen
 import com.anoop.gurbanidaily.ui.screens.HistoryScreen
 import com.anoop.gurbanidaily.ui.screens.MainScaffold
+import com.anoop.gurbanidaily.ui.screens.PunjabiMonthsScreen
 import com.anoop.gurbanidaily.ui.screens.RaagsScreen
 import com.anoop.gurbanidaily.ui.screens.SearchScreen
 import com.anoop.gurbanidaily.ui.screens.SettingsScreen
@@ -38,7 +39,8 @@ fun AppNavigation() {
                 onOpenSettings = { nav.navigate(Dest.Settings.route) },
                 onOpenSearch = { nav.navigate(Dest.Search.route) },
                 onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) },
-                onOpenRaags = { nav.navigate(Dest.Raags.route) }
+                onOpenRaags = { nav.navigate(Dest.Raags.route) },
+                onOpenPunjabiMonths = { nav.navigate(Dest.PunjabiMonths.route) }
             )
         }
         composable(Dest.Favorites.route) {
@@ -81,6 +83,9 @@ fun AppNavigation() {
                     )
                 }
             )
+        }
+        composable(Dest.PunjabiMonths.route) {
+            PunjabiMonthsScreen(onBack = { nav.popBackStack() })
         }
         composable(
             route = Dest.Reader.route,

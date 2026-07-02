@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.18 · build-18 — 2026-07-02
+- Add a Punjabi Months section to Explore.
+- Show the current Nanakshahi month and the full Sangrand month list.
+
 ## v4.17 · build-17 — 2026-07-02
 - Confirm Punjabi month Sangrand notifications are wired in Settings.
 - Add an explicit notification permission path so monthly Nanakshahi notifications can fire even if daily reminders were never enabled.

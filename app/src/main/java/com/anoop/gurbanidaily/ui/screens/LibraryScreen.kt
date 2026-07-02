@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoStories
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material.icons.outlined.WbSunny
@@ -26,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,9 +35,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.anoop.gurbanidaily.data.NanakshahiCalendar
 import com.anoop.gurbanidaily.data.ShabadApi
 import com.anoop.gurbanidaily.ui.components.DisplayHeader
 import kotlinx.coroutines.launch
@@ -48,11 +48,12 @@ fun LibraryScreen(
     onOpenSearch: () -> Unit,
     onOpenShabad: (String) -> Unit,
     onOpenRaags: () -> Unit,
-    onOpenHukamnama: () -> Unit
+    onOpenHukamnama: () -> Unit,
+    onOpenPunjabiMonths: () -> Unit
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var loadingRandom by remember { mutableStateOf(false) }
+    val currentMonth = remember { NanakshahiCalendar.currentMonth() }
 
     Column(
         modifier = Modifier
@@ -92,6 +93,13 @@ fun LibraryScreen(
             title = "Today's Hukamnama",
             subtitle = "From Sri Harmandir Sahib, Amritsar",
             onClick = onOpenHukamnama
+        )
+        Spacer(Modifier.height(12.dp))
+        BigTile(
+            icon = Icons.Outlined.CalendarMonth,
+            title = "Punjabi Months",
+            subtitle = "${currentMonth.gurmukhi} ${currentMonth.english} now · Sangrand dates",
+            onClick = onOpenPunjabiMonths
         )
         Spacer(Modifier.height(12.dp))
         BigTile(
@@ -178,4 +186,3 @@ private fun BigTile(
         }
     }
 }
-
