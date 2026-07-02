@@ -55,9 +55,11 @@ import com.anoop.gurbanidaily.GurbaniApp
 import com.anoop.gurbanidaily.BuildConfig
 import com.anoop.gurbanidaily.data.AutoUpdater
 import com.anoop.gurbanidaily.data.Backup
+import com.anoop.gurbanidaily.data.NanakshahiCalendar
 import com.anoop.gurbanidaily.data.ReminderSlot
 import com.anoop.gurbanidaily.data.UpdateInfo
 import com.anoop.gurbanidaily.notifications.ReminderScheduler
+import com.anoop.gurbanidaily.notifications.SangrandScheduler
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -111,9 +113,21 @@ fun SettingsScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
     }
 
     var pendingSlot by remember { mutableStateOf<ReminderSlot?>(null) }
+    var notificationsAllowed by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
     val permLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
+        notificationsAllowed = granted
+        if (granted) {
+            SangrandScheduler.scheduleDaily(context)
+        }
         val slot = pendingSlot
         if (granted && slot != null) {
             scope.launch {
@@ -243,6 +257,39 @@ fun SettingsScreen(onBack: () -> Unit, onOpenChangelog: () -> Unit = {}) {
                         )
                     }
                     if (idx < ReminderSlot.entries.lastIndex) HorizontalDivider()
+                }
+            }
+
+            SectionCard("Punjabi month notifications") {
+                val months = NanakshahiCalendar.months.joinToString(", ") {
+                    "${it.gurmukhi} ${it.english}"
+                }
+                Text(
+                    "Notifies around 8 AM on the first day of each Nanakshahi month.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    months,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (notificationsAllowed) {
+                    Text(
+                        "Notification permission is allowed.",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    FilledTonalButton(
+                        onClick = {
+                            pendingSlot = null
+                            permLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    ) {
+                        Text("Allow notifications")
+                    }
                 }
             }
 

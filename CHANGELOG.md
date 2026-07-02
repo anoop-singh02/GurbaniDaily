@@ -2,6 +2,10 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.17 · build-17 — 2026-07-02
+- Confirm Punjabi month Sangrand notifications are wired in Settings.
+- Add an explicit notification permission path so monthly Nanakshahi notifications can fire even if daily reminders were never enabled.
+
 ## v4.16 · build-16 — 2026-07-02
 - Restore `build-N` GitHub tags so already-installed build 11 can detect the update.
 - Keep the fixed Android `versionCode`, so once build 16 is installed the same update will not be offered again.
