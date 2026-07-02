@@ -2,6 +2,11 @@
 
 Releases are tagged `build-N` so old in-app updaters can detect them. The APK's Android `versionCode` is generated from the same build number. Newest first.
 
+## v4.22 · build-22 — 2026-07-02
+- Redesign Today's Quote into a short daily reflection: one Gurbani line, a brief meaning, and a practical thought for the day.
+- Keep the quote online through BaniDB while making the first screen easier to understand at a glance.
+- Add a Read full shabad action from the daily reflection.
+
 ## v4.21 · build-21 — 2026-07-02
 - Fix the current Punjabi month fallback for early January.
 - Clean up Settings card width, narrow-screen navigation labels, and typography spacing.

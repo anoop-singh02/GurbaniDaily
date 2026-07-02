@@ -36,6 +36,7 @@ fun AppNavigation() {
                 onOpenHistory = { nav.navigate(Dest.History.route) },
                 onOpenSettings = { nav.navigate(Dest.Settings.route) },
                 onOpenSearch = { nav.navigate(Dest.Search.route) },
+                onOpenShabad = { id -> nav.navigate(Dest.Reader.build(id)) },
                 onOpenPunjabiMonths = { nav.navigate(Dest.PunjabiMonths.route) }
             )
         }
